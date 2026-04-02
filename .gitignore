@@ -1,0 +1,58 @@
+# =============================================================================
+# AI-FORENSICS — .gitignore
+# =============================================================================
+
+# --- SECRETS (ne jamais commiter) ---
+.env
+*.env
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# --- Environnements conda/venv ---
+env/
+venv/
+.venv/
+*.conda
+
+# --- Données & modèles (trop lourds pour Git) ---
+RESULT/
+logs/
+*.log
+storage/inbox/
+storage/processing/
+storage/done/
+*.csv
+*.json
+!calib_report*.json
+swinv2_openfake/
+*.pt
+*.pth
+*.safetensors
+*.bin
+
+# --- Fichiers temporaires ---
+*.tmp
+*.bak
+*.old
+*.~
+.DS_Store
+Thumbs.db
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Dossier SUPERVISOR (pas encore soutenu) ---
+SUPERVISOR/

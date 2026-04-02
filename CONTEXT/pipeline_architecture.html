@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline Architecture — Détection d'influence</title>
+<style>
+  body {
+    margin: 0;
+    padding: 24px;
+    background: #f8f7f4;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #2c2c2a;
+  }
+  h1 {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0 0 4px 0;
+    color: #2c2c2a;
+  }
+  p.sub {
+    font-size: 13px;
+    color: #888780;
+    margin: 0 0 24px 0;
+  }
+  svg text { font-family: system-ui, -apple-system, sans-serif; }
+  .t  { font-size: 14px; fill: #2c2c2a; }
+  .ts { font-size: 12px; fill: #5f5e5a; }
+  .th { font-size: 14px; fill: #2c2c2a; font-weight: 500; }
+
+  /* c-teal */
+  .c-teal rect, .c-teal circle { fill: #E1F5EE; stroke: #0F6E56; }
+  .c-teal .th { fill: #085041; }
+  .c-teal .ts { fill: #0F6E56; }
+  /* c-purple */
+  .c-purple rect { fill: #EEEDFE; stroke: #534AB7; }
+  .c-purple .th { fill: #3C3489; }
+  .c-purple .ts { fill: #534AB7; }
+  /* c-blue */
+  .c-blue rect { fill: #E6F1FB; stroke: #185FA5; }
+  .c-blue .th { fill: #0C447C; }
+  .c-blue .ts { fill: #185FA5; }
+  /* c-amber */
+  .c-amber rect { fill: #FAEEDA; stroke: #854F0B; }
+  .c-amber .th { fill: #633806; }
+  .c-amber .ts { fill: #854F0B; }
+  /* c-coral */
+  .c-coral rect { fill: #FAECE7; stroke: #993C1D; }
+  .c-coral .th { fill: #712B13; }
+  .c-coral .ts { fill: #993C1D; }
+  /* c-green */
+  .c-green rect { fill: #EAF3DE; stroke: #3B6D11; }
+  .c-green .th { fill: #27500A; }
+  .c-green .ts { fill: #3B6D11; }
+  /* c-gray */
+  .c-gray rect { fill: #F1EFE8; stroke: #5F5E5A; }
+  .c-gray .th { fill: #2C2C2A; }
+  .c-gray .ts { fill: #5F5E5A; }
+
+  .node { cursor: pointer; }
+  .node:hover rect { opacity: 0.85; }
+  .arr { stroke: #888780; stroke-width: 1.5; fill: none; }
+  .leader { stroke: #b4b2a9; stroke-width: 0.5; stroke-dasharray: 3 3; fill: none; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a1a18; color: #d3d1c7; }
+    h1 { color: #d3d1c7; }
+    p.sub { color: #5f5e5a; }
+    .t  { fill: #d3d1c7; }
+    .ts { fill: #888780; }
+    .th { fill: #d3d1c7; }
+    .c-teal rect  { fill: #04342C; stroke: #5DCAA5; }
+    .c-teal .th   { fill: #9FE1CB; }
+    .c-teal .ts   { fill: #5DCAA5; }
+    .c-purple rect { fill: #26215C; stroke: #AFA9EC; }
+    .c-purple .th  { fill: #CECBF6; }
+    .c-purple .ts  { fill: #AFA9EC; }
+    .c-blue rect  { fill: #042C53; stroke: #85B7EB; }
+    .c-blue .th   { fill: #B5D4F4; }
+    .c-blue .ts   { fill: #85B7EB; }
+    .c-amber rect { fill: #412402; stroke: #EF9F27; }
+    .c-amber .th  { fill: #FAC775; }
+    .c-amber .ts  { fill: #EF9F27; }
+    .c-coral rect { fill: #4A1B0C; stroke: #F0997B; }
+    .c-coral .th  { fill: #F5C4B3; }
+    .c-coral .ts  { fill: #F0997B; }
+    .c-green rect { fill: #173404; stroke: #97C459; }
+    .c-green .th  { fill: #C0DD97; }
+    .c-green .ts  { fill: #97C459; }
+    .c-gray rect  { fill: #2C2C2A; stroke: #888780; }
+    .c-gray .th   { fill: #D3D1C7; }
+    .c-gray .ts   { fill: #888780; }
+    .arr { stroke: #5f5e5a; }
+  }
+</style>
+</head>
+<body>
+<h1>Pipeline — Détection de campagnes d'influence</h1>
+<p class="sub">Architecture complète · ELK et visualisation optionnels</p>
+
+<svg width="100%" viewBox="0 0 680 980" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+
+<!-- COUCHE 1 : COLLECTE -->
+<text class="ts" x="340" y="22" text-anchor="middle" style="letter-spacing:0.08em">COLLECTE</text>
+
+<g class="node c-teal">
+  <rect x="40" y="32" width="180" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="130" y="53" text-anchor="middle" dominant-baseline="central">Interface config</text>
+  <text class="ts" x="130" y="72" text-anchor="middle" dominant-baseline="central">Collections / dictionnaires</text>
+</g>
+<g class="node c-teal">
+  <rect x="250" y="32" width="180" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="340" y="53" text-anchor="middle" dominant-baseline="central">Scrapper</text>
+  <text class="ts" x="340" y="72" text-anchor="middle" dominant-baseline="central">Instagram, TikTok, Telegram…</text>
+</g>
+<g class="node c-teal">
+  <rect x="460" y="32" width="180" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="550" y="53" text-anchor="middle" dominant-baseline="central">Storage / inbox</text>
+  <text class="ts" x="550" y="72" text-anchor="middle" dominant-baseline="central">JSON + médias bruts</text>
+</g>
+
+<line x1="220" y1="60" x2="248" y2="60" class="arr" marker-end="url(#arrow)"/>
+<line x1="430" y1="60" x2="458" y2="60" class="arr" marker-end="url(#arrow)"/>
+
+<!-- COUCHE 2 : INGESTION -->
+<text class="ts" x="340" y="122" text-anchor="middle" style="letter-spacing:0.08em">INGESTION</text>
+<g class="node c-purple">
+  <rect x="200" y="132" width="280" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="340" y="153" text-anchor="middle" dominant-baseline="central">Worker import</text>
+  <text class="ts" x="340" y="172" text-anchor="middle" dominant-baseline="central">Normalise JSON → schéma MongoDB</text>
+</g>
+<path d="M550 88 L550 110 L340 110 L340 130" fill="none" class="arr" marker-end="url(#arrow)" stroke-width="1.5"/>
+
+<!-- COUCHE 3 : STOCKAGE -->
+<text class="ts" x="340" y="222" text-anchor="middle" style="letter-spacing:0.08em">STOCKAGE PRINCIPAL</text>
+<g class="node c-blue">
+  <rect x="160" y="232" width="360" height="100" rx="8" stroke-width="0.5"/>
+  <text class="th" x="340" y="258" text-anchor="middle" dominant-baseline="central">MongoDB — influence_detection</text>
+  <text class="ts" x="230" y="282" text-anchor="middle" dominant-baseline="central">accounts</text>
+  <text class="ts" x="310" y="282" text-anchor="middle" dominant-baseline="central">posts</text>
+  <text class="ts" x="385" y="282" text-anchor="middle" dominant-baseline="central">media</text>
+  <text class="ts" x="460" y="282" text-anchor="middle" dominant-baseline="central">jobs</text>
+  <text class="ts" x="340" y="308" text-anchor="middle" dominant-baseline="central">Source de vérité · Change Streams</text>
+</g>
+<line x1="340" y1="188" x2="340" y2="230" class="arr" marker-end="url(#arrow)"/>
+
+<!-- COUCHE 4 : WORKERS -->
+<text class="ts" x="340" y="368" text-anchor="middle" style="letter-spacing:0.08em">ANALYSE</text>
+<g class="node c-amber">
+  <rect x="40" y="378" width="170" height="70" rx="8" stroke-width="0.5"/>
+  <text class="th" x="125" y="402" text-anchor="middle" dominant-baseline="central">Worker deepfake</text>
+  <text class="ts" x="125" y="422" text-anchor="middle" dominant-baseline="central">detect_ai_pipeline</text>
+  <text class="ts" x="125" y="438" text-anchor="middle" dominant-baseline="central">Score + prédiction</text>
+</g>
+<g class="node c-amber">
+  <rect x="255" y="378" width="170" height="70" rx="8" stroke-width="0.5"/>
+  <text class="th" x="340" y="402" text-anchor="middle" dominant-baseline="central">Worker NLP</text>
+  <text class="ts" x="340" y="422" text-anchor="middle" dominant-baseline="central">sentence-transformers</text>
+  <text class="ts" x="340" y="438" text-anchor="middle" dominant-baseline="central">Embeddings + sentiment</text>
+</g>
+<g class="node c-amber">
+  <rect x="470" y="378" width="170" height="70" rx="8" stroke-width="0.5"/>
+  <text class="th" x="555" y="402" text-anchor="middle" dominant-baseline="central">Worker réseau</text>
+  <text class="ts" x="555" y="422" text-anchor="middle" dominant-baseline="central">Extraction relations</text>
+  <text class="ts" x="555" y="438" text-anchor="middle" dominant-baseline="central">Comptes, forwards</text>
+</g>
+
+<!-- Change Streams → workers -->
+<path d="M250 310 L130 310 L130 376" fill="none" class="arr" marker-end="url(#arrow)" stroke-width="1.5"/>
+<path d="M310 332 L340 332 L340 376" fill="none" class="arr" marker-end="url(#arrow)" stroke-width="1.5"/>
+<path d="M430 310 L555 310 L555 376" fill="none" class="arr" marker-end="url(#arrow)" stroke-width="1.5"/>
+
+<!-- Workers → mongo enrichissement -->
+<path d="M125 378 L125 356 L250 356 L250 332" fill="none" class="arr" marker-end="url(#arrow)" stroke-width="1" stroke-dasharray="4 3"/>
+<path d="M340 378 L340 356" fill="none" class="arr" marker-end="url(#arrow)" stroke-width="1" stroke-dasharray="4 3"/>
+<path d="M555 378 L555 356 L430 356 L430 332" fill="none" class="arr" marker-end="url(#arrow)" stroke-width="1" stroke-dasharray="4 3"/>
+
+<!-- COUCHE 5 : ETL -->
+<text class="ts" x="340" y="484" text-anchor="middle" style="letter-spacing:0.08em">ETL</text>
+<g class="node c-gray">
+  <rect x="160" y="494" width="360" height="44" rx="8" stroke-width="0.5"/>
+  <text class="th" x="340" y="516" text-anchor="middle" dominant-baseline="central">Change Streams ETL</text>
+  <text class="ts" x="340" y="530" text-anchor="middle" dominant-baseline="central">MongoDB → Neo4j + Elasticsearch</text>
+</g>
+<line x1="340" y1="448" x2="340" y2="492" class="arr" marker-end="url(#arrow)"/>
+
+<!-- COUCHE 6 : SPÉCIALISTES -->
+<text class="ts" x="340" y="578" text-anchor="middle" style="letter-spacing:0.08em">ANALYSE SPÉCIALISÉE</text>
+<g class="node c-coral">
+  <rect x="60" y="588" width="230" height="70" rx="8" stroke-width="0.5"/>
+  <text class="th" x="175" y="612" text-anchor="middle" dominant-baseline="central">Neo4j</text>
+  <text class="ts" x="175" y="632" text-anchor="middle" dominant-baseline="central">Relations, propagation</text>
+  <text class="ts" x="175" y="648" text-anchor="middle" dominant-baseline="central">Détection de campagnes</text>
+</g>
+<g class="node c-green">
+  <rect x="390" y="588" width="230" height="70" rx="8" stroke-width="0.5"/>
+  <text class="th" x="505" y="612" text-anchor="middle" dominant-baseline="central">Elasticsearch</text>
+  <text class="ts" x="505" y="632" text-anchor="middle" dominant-baseline="central">Index full-text</text>
+  <text class="ts" x="505" y="648" text-anchor="middle" dominant-baseline="central">Recherche, agrégations</text>
+</g>
+<path d="M280 516 L175 516 L175 586" fill="none" class="arr" marker-end="url(#arrow)"/>
+<path d="M400 516 L505 516 L505 586" fill="none" class="arr" marker-end="url(#arrow)"/>
+
+<!-- COUCHE 7 : OPTIONNEL -->
+<rect x="32" y="700" width="616" height="110" rx="10" fill="none" stroke="#b4b2a9" stroke-width="1" stroke-dasharray="6 4"/>
+<text class="ts" x="52" y="694" style="fill:#b4b2a9">Optionnel — visualisation &amp; alertes</text>
+<g class="node c-green">
+  <rect x="52" y="714" width="150" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="127" y="736" text-anchor="middle" dominant-baseline="central">Kibana</text>
+  <text class="ts" x="127" y="754" text-anchor="middle" dominant-baseline="central">Dashboards ELK</text>
+</g>
+<g class="node c-coral">
+  <rect x="228" y="714" width="150" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="303" y="736" text-anchor="middle" dominant-baseline="central">Neo4j Bloom</text>
+  <text class="ts" x="303" y="754" text-anchor="middle" dominant-baseline="central">Visualisation graphe</text>
+</g>
+<g class="node c-gray">
+  <rect x="404" y="714" width="150" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="479" y="736" text-anchor="middle" dominant-baseline="central">Alertes</text>
+  <text class="ts" x="479" y="754" text-anchor="middle" dominant-baseline="central">Webhooks, emails</text>
+</g>
+<path d="M175 658 L175 712" fill="none" stroke="#b4b2a9" stroke-width="1" marker-end="url(#arrow)"/>
+<path d="M505 658 L505 712" fill="none" stroke="#b4b2a9" stroke-width="1" marker-end="url(#arrow)"/>
+<path d="M303 712 L303 694 L479 694 L479 712" fill="none" stroke="#b4b2a9" stroke-width="1" marker-end="url(#arrow)"/>
+
+<!-- LEGENDE -->
+<line x1="40" y1="848" x2="80" y2="848" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text class="ts" x="88" y="852">Flux principal</text>
+<line x1="200" y1="848" x2="240" y2="848" stroke="#888780" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="ts" x="248" y="852">Enrichissement MongoDB</text>
+<line x1="420" y1="848" x2="460" y2="848" stroke="#b4b2a9" stroke-width="1" marker-end="url(#arrow)"/>
+<text class="ts" x="468" y="852">Optionnel</text>
+
+</svg>
+</body>
+</html>

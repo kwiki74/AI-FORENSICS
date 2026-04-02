@@ -1,0 +1,3 @@
+[submodule "WORKER/DETECT_AI_PIPLINE/synthbuster"]
+	path = WORKER/DETECT_AI_PIPLINE/synthbuster
+	url = https://github.com/qbammey/synthbuster

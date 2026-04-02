@@ -1,0 +1,10 @@
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True python fine_tune_swinv2.py     --data-dir ../../DATASET/calib_dataset     --output-dir ./swinv2_openfake     --epochs 10     --batch-size 16     --num-workers 8     --verbose
+
+
+
+
+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
+
+echo "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" > ~/.huggingface/token
+
+Transfer2-Threaten1-Crabbing6-Encounter4-Subsystem0

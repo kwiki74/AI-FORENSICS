@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-03-21T14:44:31.151178",
+  "calib_dir": "../../DATASET/calib_dataset",
+  "criterion": "fp_first",
+  "models": {
+    "Organika/sdxl-detector": {
+      "avg_real": 0.2058,
+      "avg_alt": 0.3545,
+      "fp_penalty": 0.2058,
+      "fp_factor": 0.6308,
+      "detect_margin": 0.1488,
+      "final_score": 0.0938,
+      "n_real": 52080,
+      "n_alt": 57374,
+      "bias": 0.2058,
+      "weight": 0.1014,
+      "bias_before": 0.21,
+      "weight_before": 0.4
+    },
+    "swinv2_openfake": {
+      "avg_real": 0.0325,
+      "avg_alt": 0.8938,
+      "fp_penalty": 0.0325,
+      "fp_factor": 0.936,
+      "detect_margin": 0.8613,
+      "final_score": 0.8062,
+      "n_real": 52080,
+      "n_alt": 57374,
+      "bias": 0.0325,
+      "weight": 0.8713,
+      "bias_before": null,
+      "weight_before": null
+    },
+    "synthbuster/synthbuster": {
+      "avg_real": 0.3977,
+      "avg_alt": 0.4673,
+      "fp_penalty": 0.3977,
+      "fp_factor": 0.3628,
+      "detect_margin": 0.0696,
+      "final_score": 0.0253,
+      "n_real": 52080,
+      "n_alt": 57374,
+      "bias": 0.3977,
+      "weight": 0.0273,
+      "bias_before": 0.5,
+      "weight_before": 0.15
+    }
+  }
+}

@@ -1,0 +1,100 @@
+# =============================================================================
+# requirements_forensics.txt — AI Forensics Pipeline v4.0.3
+# =============================================================================
+#
+# Environnement : forensics  (worker deepfake + worker import + supervisord)
+# Script couvert : detect_ai_pipeline-v4.0.3.py, worker_import.py, schema.py
+#
+# =============================================================================
+# INSTALLATION
+# =============================================================================
+#
+#   # 1. Créer et activer l'environnement
+#   conda create -n forensics python=3.11 -y
+#   conda activate forensics
+#
+#   # 2. PyTorch — choisir UNE option selon le matériel
+#
+#   ## Option A — CPU uniquement (VM sans GPU)
+#   conda install pytorch==2.6.0 torchvision==0.21.0 cpuonly -c pytorch -y
+#
+#   ## Option B — GPU NVIDIA CUDA 12.x (hors RTX 50xx)
+#   conda install pytorch==2.6.0 torchvision==0.21.0 pytorch-cuda=12.1 -c pytorch -c nvidia -y
+#
+#   ## Option C — GPU RTX 50xx Blackwell (sm_120) — PyTorch nightly requis
+#   pip install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu128
+#
+#   # 3. Dépendances Python
+#   pip install -r requirements_forensics.txt
+#
+#   # 4. Dépendances système
+#   sudo apt install -y ffmpeg git
+#
+#   # 5. Modèle Synthbuster
+#   cd ~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE
+#   git clone https://github.com/qbammey/synthbuster synthbuster
+#   # Copier model_jpeg.joblib + config_jpeg.json dans synthbuster/models/
+#
+#   # 6. Lancement CPU (force désactivation GPU — évite le warning sm_120)
+#   CUDA_VISIBLE_DEVICES="" python detect_ai_pipeline-v4.0.3.py --mongojob --workers 1
+#
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# 1. PyTorch — NE PAS installer ici
+#    Installer via conda (Option A/B) ou pip nightly (Option C) — voir ci-dessus
+# -----------------------------------------------------------------------------
+# torch>=2.6.0        ← via conda ou pip nightly
+# torchvision>=0.21.0 ← idem
+
+
+# -----------------------------------------------------------------------------
+# 2. HuggingFace — SDXL-detector + SwinV2 OpenFake
+# -----------------------------------------------------------------------------
+transformers>=4.40.0
+accelerate>=0.30.0
+huggingface-hub>=0.23.0
+timm>=0.9.0
+
+
+# -----------------------------------------------------------------------------
+# 3. Vision & traitement image/vidéo
+# -----------------------------------------------------------------------------
+opencv-python>=4.9.0
+Pillow>=10.3.0
+imageio>=2.34.0
+decord>=0.6.0
+
+
+# -----------------------------------------------------------------------------
+# 4. Données & utilitaires pipeline
+# -----------------------------------------------------------------------------
+numpy>=1.26.0
+pandas>=2.2.0
+tqdm>=4.66.0
+python-dotenv>=1.0.0
+python-dotenv
+
+# -----------------------------------------------------------------------------
+# 5. Synthbuster — détecteur spectral Fourier
+#    preprocess.py du repo cloné dépend de ces trois packages
+# -----------------------------------------------------------------------------
+scikit-learn>=1.4.0
+joblib>=1.4.0
+numba>=0.59.0
+
+
+# -----------------------------------------------------------------------------
+# 6. MongoDB — base de vérité (mode --mongojob + worker_import)
+# -----------------------------------------------------------------------------
+pymongo>=4.6.0
+
+
+# -----------------------------------------------------------------------------
+# 7. Infrastructure & supervision
+# -----------------------------------------------------------------------------
+supervisor>=4.2.0
+psutil>=5.9.0
+rich>=13.0.0
+colorlog>=6.7.0

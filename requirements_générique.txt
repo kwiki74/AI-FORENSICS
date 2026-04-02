@@ -1,0 +1,96 @@
+# =============================================================================
+# requirements_nlp.txt — AI Forensics Pipeline (environnement nlp_pipeline)
+# =============================================================================
+#
+# Environnement : nlp_pipeline
+# Scripts couverts :
+#   - nlp_worker.py          (NLP : sentiment, embeddings, clustering narratif)
+#   - sentiment.py           (analyse sentiment FR/EN — camembert/distilbert)
+#   - embeddings.py          (sentence-transformers, déduplication)
+#   - narrative_clustering.py (UMAP + HDBSCAN)
+#   - network_worker.py      (ETL MongoDB → Neo4j, Change Streams)
+#   - campaign_detector.py   (détection campagnes coordonnées)
+#   - neo4j_client.py        (client Neo4j + GDS)
+#
+# =============================================================================
+# INSTALLATION
+# =============================================================================
+#
+#   # 1. Créer et activer l'environnement
+#   conda create -n nlp_pipeline python=3.11 -y
+#   conda activate nlp_pipeline
+#
+#   # 2. PyTorch avec CUDA (recommandé — les modèles NLP bénéficient du GPU)
+#
+#   ## Option A — CPU uniquement
+#   conda install pytorch==2.6.0 cpuonly -c pytorch -y
+#
+#   ## Option B — GPU NVIDIA CUDA 12.x (hors RTX 50xx)
+#   conda install pytorch==2.6.0 pytorch-cuda=12.1 -c pytorch -c nvidia -y
+#
+#   ## Option C — GPU RTX 50xx Blackwell (sm_120)
+#   pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu128
+#
+#   # 3. Dépendances Python
+#   pip install -r requirements_nlp.txt
+#
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# 1. PyTorch — NE PAS installer ici, voir instructions ci-dessus
+# -----------------------------------------------------------------------------
+# torch>=2.6.0   ← via conda ou pip nightly
+
+
+# -----------------------------------------------------------------------------
+# 2. HuggingFace — modèles sentiment (camembert, distilbert) + embeddings
+# -----------------------------------------------------------------------------
+transformers>=5.0.0
+accelerate>=1.0.0
+huggingface-hub>=0.23.0
+safetensors>=0.4.0
+tokenizers>=0.19.0
+sentence-transformers>=5.0.0
+
+
+# -----------------------------------------------------------------------------
+# 3. Tokeniseurs — requis par camembert/distilcamembert (sentiment FR)
+# -----------------------------------------------------------------------------
+sentencepiece>=0.1.99
+tiktoken>=0.6.0
+protobuf>=4.0.0
+
+
+# -----------------------------------------------------------------------------
+# 4. NLP — détection de langue, clustering narratif
+# -----------------------------------------------------------------------------
+lingua-language-detector>=2.1.0
+scikit-learn>=1.8.0
+scipy>=1.11.0
+umap-learn>=0.5.6
+hdbscan>=0.8.33
+numpy>=1.26.0
+
+
+# -----------------------------------------------------------------------------
+# 5. MongoDB — Change Streams (nlp_worker + network_worker)
+# -----------------------------------------------------------------------------
+pymongo>=4.6.0
+python-dotenv>=1.0.0
+
+
+# -----------------------------------------------------------------------------
+# 6. Neo4j — graphe de relations / campagnes (network_worker)
+# -----------------------------------------------------------------------------
+neo4j>=5.0.0
+
+
+# -----------------------------------------------------------------------------
+# 7. Utilitaires
+# -----------------------------------------------------------------------------
+tqdm>=4.66.0
+psutil>=5.9.0
+rich>=13.0.0
+colorlog>=6.7.0
+PyYAML>=6.0.0

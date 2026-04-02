@@ -1,0 +1,68 @@
+[Unit]
+Description=Worker NLP — Analyse sentiment (influence_detection)
+Documentation=https://github.com/kwiki/ai-forensics
+# Démarre après MongoDB et le réseau
+After=network.target mongod.service
+Wants=mongod.service
+
+[Service]
+# -----------------------------------------------------------------------
+# Identité — adapter si nécessaire
+# -----------------------------------------------------------------------
+User=kwiki
+Group=kwiki
+WorkingDirectory=/home/kwiki/AI-FORENSICS/WORKER/NLP
+
+# -----------------------------------------------------------------------
+# Commande de lancement
+# Utilise l'interpréteur Python du conda env nlp_pipeline
+# -----------------------------------------------------------------------
+ExecStart=/home/kwiki/miniconda3/envs/nlp_pipeline/bin/python \
+    nlp_worker.py \
+    --config nlp_pipeline.cfg \
+    --backfill
+
+# -----------------------------------------------------------------------
+# Politique de redémarrage
+# on-failure : redémarre uniquement en cas de crash (code retour != 0)
+# Pas de redémarrage si arrêt propre (Ctrl+C / SIGTERM → code 0)
+# -----------------------------------------------------------------------
+Restart=on-failure
+RestartSec=10s
+
+# Nombre maximum de redémarrages sur une fenêtre de 5 minutes
+# Evite une boucle infinie en cas de bug persistant
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+# -----------------------------------------------------------------------
+# Logs — redirigés vers journald (accessible via journalctl)
+# La console colorisée du worker reste visible dans les journaux
+# -----------------------------------------------------------------------
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nlp-worker
+
+# -----------------------------------------------------------------------
+# Variables d'environnement
+# Alternative au .env si on veut tout gérer via systemd
+# -----------------------------------------------------------------------
+# Environment=MONGO_HOST=localhost
+# Environment=MONGO_PORT=27017
+# Environment=HF_TOKEN=/home/kwiki/.huggingface/token
+
+# Chargement depuis un fichier (plus sécurisé que Environment=)
+# EnvironmentFile=/home/kwiki/AI-FORENSICS/WORKER/NLP/.env
+
+# -----------------------------------------------------------------------
+# Sécurité (optionnel — durcissement systemd)
+# -----------------------------------------------------------------------
+# PrivateTmp=true
+# NoNewPrivileges=true
+
+# Timeout d'arrêt propre avant SIGKILL
+TimeoutStopSec=30s
+
+[Install]
+# Démarrage automatique au boot (multi-user = mode serveur standard)
+WantedBy=multi-user.target

@@ -1,0 +1,28 @@
+[Unit]
+Description=Worker Réseau — ETL MongoDB → Neo4j (influence_detection)
+After=network.target mongod.service neo4j.service
+Wants=mongod.service neo4j.service
+
+[Service]
+User=kwiki
+Group=kwiki
+WorkingDirectory=/home/kwiki/AI-FORENSICS/WORKER/NETWORK
+
+ExecStart=/home/kwiki/miniconda3/envs/nlp_pipeline/bin/python \
+    network_worker.py \
+    --config network_pipeline.cfg \
+    --backfill
+
+Restart=on-failure
+RestartSec=10s
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=network-worker
+
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=multi-user.target
