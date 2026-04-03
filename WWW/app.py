@@ -53,7 +53,7 @@ st.markdown("""
     line-height: 1.2;
 }
 .app-subtitle {
-    font-size: 12px;
+    font-size: 40px;
     color: #656d76;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -131,7 +131,6 @@ PAGES: dict[str, dict] = {
     "supervision": {"label": "⚙️  Supervision",        "module": "supervision"},
     "forensics":   {"label": "🔬  Forensics Explorer",  "module": "forensics_explorer"},
     "graph":       {"label": "🕸  Graph",               "module": "graph"},
-    "neo4j":       {"label": "🗃  Neo4j Explorer",      "module": "neo4j_explorer"},
 }
 
 
@@ -207,8 +206,12 @@ def sysbar_html() -> str:
 # EN-TÊTE
 # ═══════════════════════════════════════════════════════════════════════════════
 st.markdown(
-    "<p class='app-title'>AI-FORENSICS</p>"
-    "<p class='app-subtitle'>Plateforme de détection d'influence & analyse de médias</p>",
+    "<p style='font-size:90px;font-weight:800;letter-spacing:0.04em;margin:0;line-height:1;"
+    "background:linear-gradient(90deg,#58a6ff 0%,#a371f7 50%,#f78166 100%);"
+    "-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;'>"
+    "AI-FORENSICS</p>"
+    "<p style='font-size:30px;color:#656d76;letter-spacing:0.12em;text-transform:uppercase;margin:2px 0 10px 0;'>"
+    "Plateforme de détection d'influence &amp; analyse de médias</p>",
     unsafe_allow_html=True,
 )
 
@@ -249,6 +252,4 @@ elif _page == "graph":
     from graph import render
     render()
 
-elif _page == "neo4j":
-    from neo4j_explorer import render
-    render()
+

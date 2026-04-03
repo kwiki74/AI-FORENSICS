@@ -307,7 +307,21 @@ pip install streamlit
 pip install neo4j
 pip install python-dotenv
 pip install pymongo
+pip install psutil
 ```
+
+Une fois l'installation completement terminer, vous pouvez lancer la page de cette manière : 
+
+```bash
+#activation de l'environement
+conda activate www
+
+#lancement de la page via streamlit (attention, la commande ne rends pas la main)
+streamlit run ~/AI-FORENSICS/WWW/app.py
+
+```
+
+
 
 ---
 
