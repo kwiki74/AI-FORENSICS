@@ -152,20 +152,22 @@ button[kind="secondary"].btn-select:hover {
     background: #ddf4ff !important;
 }
 
-/* ══════════════ DARK MODE ══════════════ */
-html[data-theme="dark"] .stApp                   { background-color: #0d1117; color: #e6edf3; }
-html[data-theme="dark"] [data-testid="stHeader"] { background-color: #0d1117; }
-html[data-theme="dark"] .doc-card                { background: #161b22; border-color: #30363d; }
-html[data-theme="dark"] .doc-card.selected       { border-color: #1f6feb; background: #1d3348; }
-html[data-theme="dark"] .detail-panel            { background: #161b22; border-color: #30363d; }
-html[data-theme="dark"] .section-title           { color: #79c0ff; border-bottom-color: #30363d; }
-html[data-theme="dark"] .kv-k                    { color: #8b949e; }
-html[data-theme="dark"] .kv-v                    { color: #e6edf3; }
-html[data-theme="dark"] .bar-wrap                { background: #21262d; }
-html[data-theme="dark"] .topic-tag               { background: #1d3348; border-color: #388bfd; color: #79c0ff; }
-html[data-theme="dark"] .filter-hdr              { color: #8b949e; }
-html[data-theme="dark"] .content-block           { background: #161b22; border-color: #30363d; color: #e6edf3; }
-html[data-theme="dark"] .pred-suspicious         { color: #d4a72c; }
+/* ══════════════ DARK MODE (thème OS) ══════════════ */
+@media (prefers-color-scheme: dark) {
+    .stApp                    { background-color: #0d1117; color: #e6edf3; }
+    [data-testid="stHeader"]  { background-color: #0d1117; }
+    .doc-card                 { background: #161b22; border-color: #30363d; }
+    .doc-card.selected        { border-color: #1f6feb; background: #1d3348; }
+    .detail-panel             { background: #161b22; border-color: #30363d; }
+    .section-title            { color: #79c0ff; border-bottom-color: #30363d; }
+    .kv-k                     { color: #8b949e; }
+    .kv-v                     { color: #e6edf3; }
+    .bar-wrap                 { background: #21262d; }
+    .topic-tag                { background: #1d3348; border-color: #388bfd; color: #79c0ff; }
+    .filter-hdr               { color: #8b949e; }
+    .content-block            { background: #161b22; border-color: #30363d; color: #e6edf3; }
+    .pred-suspicious          { color: #d4a72c; }
+}
 </style>
 """
 
