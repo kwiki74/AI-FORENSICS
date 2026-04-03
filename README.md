@@ -51,7 +51,7 @@ DATA_IN (JSON scrappés)
 
 ## Installation
 
-Voir [INSTALL_v3.2.md](INSTALL_v3.2.md) pour le guide complet.
+Voir [INSTALL.md](INSTALL.md) pour le guide complet.
 
 ### Résumé rapide
 
