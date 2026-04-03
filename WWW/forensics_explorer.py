@@ -537,25 +537,17 @@ def render_post_detail(doc: dict):
     if media_refs:
         st.markdown(section(f"🖼️ Médias attachés ({len(media_refs)})"),
                     unsafe_allow_html=True)
-        for i, ref in enumerate(media_refs):
+        for ref in media_refs:
             url_local = ref.get("url_local") or ""
             path      = Path(url_local) if url_local else None
             ext       = path.suffix.lower() if path else ""
 
             if path and path.exists():
-                if ext in IMAGE_EXTS:
+                if ext in IMAGE_EXTS or ext == ".gif":
                     st.image(str(path), use_container_width=True)
-                elif ext in VIDEO_EXTS or ext == ".gif":
-                    data_uri, mime = load_media_b64(url_local)
-                    if data_uri:
-                        st.markdown(
-                            f"<video controls style='width:100%;border-radius:6px;margin-top:4px;'>"
-                            f"<source src='{data_uri}' type='{mime}'>"
-                            f"Navigateur incompatible.</video>",
-                            unsafe_allow_html=True,
-                        )
-                    else:
-                        st.warning(f"Impossible de charger le média {i+1}")
+                elif ext in VIDEO_EXTS:
+                    _, mime = load_media_b64(url_local)
+                    st.video(path.read_bytes(), format=mime or "video/mp4")
                 else:
                     st.info(f"Type non prévisualisable : `{ext}`")
             else:
