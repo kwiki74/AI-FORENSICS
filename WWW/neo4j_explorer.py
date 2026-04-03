@@ -515,14 +515,7 @@ viz.render();
 
 
 # ── Interface Streamlit ────────────────────────────────────────────────────────
-def main():
-    st.set_page_config(
-        page_title="AI-FORENSICS · Graph Explorer",
-        page_icon="🕸",
-        layout="wide",
-        initial_sidebar_state="expanded",
-    )
-
+def render():
     # ── Détection thème Streamlit → injection dans l'iframe ──────────
     # Streamlit stocke le thème dans localStorage["stActiveTheme"]
     # On injecte un script qui le lit et l'envoie à l'iframe via postMessage
@@ -716,6 +709,16 @@ def main():
             st.error(f"Erreur Cypher : {e}")
         except Exception as e:
             st.error(f"Erreur : {e}")
+
+
+def main():
+    st.set_page_config(
+        page_title="AI-FORENSICS · Graph Explorer",
+        page_icon="🕸",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
+    render()
 
 
 if __name__ == "__main__":
