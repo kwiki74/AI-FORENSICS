@@ -132,26 +132,40 @@ _CSS = """
     margin: 10px 0 6px 0;
 }
 
-/* ── Bouton discret (▶) dans la carte ── */
-/* Supprime le margin-bottom entre la carte et le bouton adjacent */
-[data-testid="stHorizontalBlock"]:has(.doc-card) { margin-bottom: 7px; }
+/* ── Bloc contenu texte ── */
+.content-block {
+    font-size: 13px; color: #1f2328; line-height: 1.6;
+    background: #f6f8fa; border: 1px solid #d0d7de;
+    border-radius: 6px; padding: 10px;
+}
 
-/* Bouton ▶ : minimaliste, juste une icône */
+/* ── Bouton discret (▶) dans la carte ── */
+[data-testid="stHorizontalBlock"]:has(.doc-card) { margin-bottom: 7px; }
 button[kind="secondary"].btn-select {
-    background: transparent !important;
-    border: 1px solid #d0d7de !important;
-    border-radius: 6px !important;
-    color: #656d76 !important;
-    padding: 0 !important;
-    min-height: unset !important;
-    height: 100% !important;
-    font-size: 14px !important;
+    background: transparent !important; border: 1px solid #d0d7de !important;
+    border-radius: 6px !important; color: #656d76 !important;
+    padding: 0 !important; min-height: unset !important;
+    height: 100% !important; font-size: 14px !important;
 }
 button[kind="secondary"].btn-select:hover {
-    border-color: #0969da !important;
-    color: #0969da !important;
+    border-color: #0969da !important; color: #0969da !important;
     background: #ddf4ff !important;
 }
+
+/* ══════════════ DARK MODE ══════════════ */
+html[data-theme="dark"] .stApp                   { background-color: #0d1117; color: #e6edf3; }
+html[data-theme="dark"] [data-testid="stHeader"] { background-color: #0d1117; }
+html[data-theme="dark"] .doc-card                { background: #161b22; border-color: #30363d; }
+html[data-theme="dark"] .doc-card.selected       { border-color: #1f6feb; background: #1d3348; }
+html[data-theme="dark"] .detail-panel            { background: #161b22; border-color: #30363d; }
+html[data-theme="dark"] .section-title           { color: #79c0ff; border-bottom-color: #30363d; }
+html[data-theme="dark"] .kv-k                    { color: #8b949e; }
+html[data-theme="dark"] .kv-v                    { color: #e6edf3; }
+html[data-theme="dark"] .bar-wrap                { background: #21262d; }
+html[data-theme="dark"] .topic-tag               { background: #1d3348; border-color: #388bfd; color: #79c0ff; }
+html[data-theme="dark"] .filter-hdr              { color: #8b949e; }
+html[data-theme="dark"] .content-block           { background: #161b22; border-color: #30363d; color: #e6edf3; }
+html[data-theme="dark"] .pred-suspicious         { color: #d4a72c; }
 </style>
 """
 
@@ -504,13 +518,11 @@ def render_post_detail(doc: dict):
     text_content = txt.get("content") or ""
     if text_content:
         st.markdown(
-            f"<div style='font-size:13px;color:#1f2328;line-height:1.6;"
-            f"background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:10px;'>"
-            f"{text_content}</div>",
+            f"<div class='content-block'>{text_content}</div>",
             unsafe_allow_html=True,
         )
     else:
-        st.markdown("<span style='color:#555;font-size:12px;'>Pas de texte</span>",
+        st.markdown("<span style='color:#8b949e;font-size:12px;'>Pas de texte</span>",
                     unsafe_allow_html=True)
 
     tags = txt.get("hashtags") or []
