@@ -36,17 +36,12 @@ try:
 except ImportError:
     pass
 
-# ─── Page config ───────────────────────────────────────────────────────────────
-st.set_page_config(
-    page_title="AI Forensics Explorer",
-    page_icon="🔬",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
-
 # ─── CSS  ──────────────────────────────────────────────────────────────────────
-st.markdown("""
+_CSS = """
 <style>
+/* ── Pleine largeur ── */
+.block-container { max-width: 100% !important; padding-left: 1rem !important; padding-right: 1rem !important; }
+
 /* ── Fond global (mode clair) ── */
 .stApp { background-color: #f6f8fa; color: #1f2328; }
 [data-testid="stHeader"] { background-color: #f6f8fa; }
@@ -158,7 +153,7 @@ button[kind="secondary"].btn-select:hover {
     background: #ddf4ff !important;
 }
 </style>
-""", unsafe_allow_html=True)
+"""
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -381,7 +376,7 @@ def card_post(doc: dict, selected: bool) -> str:
     score_str  = f"{score:.2f}" if score is not None else "—"
     text       = (doc.get("text") or {}).get("content") or ""
     preview    = (text[:85] + "…") if len(text) > 85 else text
-    username   = doc.get("account_platform_id", "?")
+    short_text = (text[:30] + "…") if len(text) > 30 else (text if text else "Sans texte")
     pub        = fmt_dt((doc.get("context") or {}).get("published_at"))
     media_icon = "📎" if df.get("has_media") else ""
     sel_cls    = "selected" if selected else ""
@@ -395,42 +390,10 @@ def card_post(doc: dict, selected: bool) -> str:
         <span class='{css}' style='font-size:12px;'>{icon} {score_str}</span>
       </div>
       <div style='font-size:11px;color:#656d76;margin-bottom:3px;'>
-        @{username} · {pub} {media_icon} {proj_tag}
+        {short_text} · {pub} {media_icon} {proj_tag}
       </div>
       <div style='font-size:12px;color:#1f2328;line-height:1.4;'>
         {preview or "<em style='color:#999'>pas de texte</em>"}
-      </div>
-    </div>"""
-
-
-def card_media(doc: dict, selected: bool) -> str:
-    df         = doc.get("deepfake", {}) or {}
-    prediction = df.get("prediction")
-    score      = df.get("final_score")
-    icon, css, label = PREDICTION_META.get(prediction, PREDICTION_META[None])
-    score_str  = f"{score:.2f}" if score is not None else "—"
-    media_type = doc.get("type", "?")
-    url_local  = doc.get("url_local") or ""
-    fname      = Path(url_local).name if url_local else str(doc.get("_id", ""))[:14]
-    meta       = doc.get("metadata") or {}
-    dims       = f"{meta.get('width','?')}×{meta.get('height','?')}" if meta.get("width") else "—"
-    size_kb    = f"{(meta.get('size_bytes') or 0) // 1024} KB" if meta.get("size_bytes") else "—"
-    reuse      = doc.get("reuse", {}) or {}
-    seen       = reuse.get("seen_count", 1)
-    reuse_warn = f"<span style='color:#9a6700;'>⚠️ ×{seen}</span>" if seen > 1 else ""
-    type_icon  = {"image": "🖼️", "video": "🎬", "audio": "🎵", "gif": "🎞️"}.get(media_type, "📄")
-    sel_cls    = "selected" if selected else ""
-    src        = doc.get("source") or {}
-    proj_tag   = f"<span style='color:#656d76;font-size:10px;'>📁 {src.get('project','')}</span>" if src.get("project") else ""
-
-    return f"""
-    <div class='doc-card {sel_cls}'>
-      <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;'>
-        <span style='font-size:13px;color:#1f2328;'>{type_icon} <strong>{fname}</strong></span>
-        <span class='{css}' style='font-size:12px;'>{icon} {score_str}</span>
-      </div>
-      <div style='font-size:11px;color:#656d76;'>
-        {dims} · {size_kb} {reuse_warn} {proj_tag}
       </div>
     </div>"""
 
@@ -576,115 +539,27 @@ def render_post_detail(doc: dict):
                     unsafe_allow_html=True)
         for i, ref in enumerate(media_refs):
             url_local = ref.get("url_local") or ""
-            mtype     = ref.get("type", "?")
-            btn_label = f"{'🎬' if mtype == 'video' else '🖼️'} Ouvrir média {i+1}"
-            if st.button(btn_label, key=f"open_media_ref_{doc.get('_id')}_{i}"):
-                show_media_popup(url_local, mtype, ref)
+            path      = Path(url_local) if url_local else None
+            ext       = path.suffix.lower() if path else ""
 
-
-def render_media_detail(doc: dict):
-    """Affiche le panneau de détail pour un média."""
-    if not doc:
-        st.markdown("<div style='color:#999;text-align:center;padding:40px;'>← Sélectionne un média</div>",
-                    unsafe_allow_html=True)
-        return
-
-    df        = doc.get("deepfake", {}) or {}
-    meta      = doc.get("metadata", {}) or {}
-    reuse     = doc.get("reuse", {}) or {}
-    src       = doc.get("source", {}) or {}
-    media_type = doc.get("type", "?")
-    url_local  = doc.get("url_local") or ""
-    fname      = Path(url_local).name if url_local else str(doc.get("_id", ""))
-
-    type_icon = {"image": "🖼️", "video": "🎬", "audio": "🎵", "gif": "🎞️"}.get(media_type, "📄")
-    st.markdown(f"**{type_icon} {fname}**")
-
-    # Bouton d'ouverture média
-    if url_local:
-        if st.button("▶ Ouvrir le média", key=f"open_media_detail_{doc.get('_id')}"):
-            show_media_popup(url_local, media_type, doc)
-
-    # ── Source ───────────────────────────────────────────────────────────────
-    if any(src.values()):
-        st.markdown(section("Source (projet / scan)"), unsafe_allow_html=True)
-        st.markdown(
-            kv_html("Projet", src.get("project")) +
-            kv_html("Scan",   src.get("scan")) +
-            kv_html("User",   src.get("user")),
-            unsafe_allow_html=True,
-        )
-
-    # ── Deepfake ──────────────────────────────────────────────────────────────
-    st.markdown(section("🔍 Analyse Deepfake"), unsafe_allow_html=True)
-    st.markdown(prediction_html(df.get("prediction"), df.get("final_score")),
-                unsafe_allow_html=True)
-    st.markdown(bar_html(df.get("final_score"), "Score final"),
-                unsafe_allow_html=True)
-
-    st.markdown(
-        kv_html("Statut",          df.get("status", "—")) +
-        kv_html("Divergence",      f"{df.get('model_divergence'):.3f}" if df.get("model_divergence") is not None else "—") +
-        kv_html("Score artefact",  f"{df.get('artifact_score'):.3f}" if df.get("artifact_score") is not None else "—") +
-        kv_html("Frames analysées",df.get("frames_analyzed")) +
-        kv_html("Faces détectées", df.get("faces_detected")) +
-        kv_html("Version pipeline",df.get("pipeline_version")) +
-        kv_html("Analysé le",      fmt_dt(df.get("processed_at"))),
-        unsafe_allow_html=True,
-    )
-
-    # Scores par modèle
-    scores = df.get("scores") or {}
-    if scores:
-        for model, val in scores.items():
-            st.markdown(bar_html(val, f"↳ {model}"), unsafe_allow_html=True)
-
-    raw_scores = df.get("raw_scores") or {}
-    if raw_scores:
-        st.markdown("<div style='font-size:11px;color:#555;margin-top:4px;'>Scores bruts (avant calibration)</div>",
-                    unsafe_allow_html=True)
-        for model, val in raw_scores.items():
-            st.markdown(bar_html(val, f"↳ {model} (raw)"), unsafe_allow_html=True)
-
-    if df.get("error"):
-        st.markdown(
-            f"<div style='color:#cf222e;font-size:11px;background:#ffebe9;"
-            f"border:1px solid #ff8182;border-radius:4px;padding:6px 8px;margin-top:6px;'>"
-            f"⚠️ {df['error']}</div>",
-            unsafe_allow_html=True,
-        )
-
-    # ── Métadonnées fichier ───────────────────────────────────────────────────
-    st.markdown(section("📁 Fichier"), unsafe_allow_html=True)
-    size_str = f"{(meta.get('size_bytes') or 0) // 1024} KB" if meta.get("size_bytes") else "—"
-    st.markdown(
-        kv_html("Type",       media_type) +
-        kv_html("Format",     meta.get("format")) +
-        kv_html("Codec",      meta.get("codec")) +
-        kv_html("Dimensions", f"{meta.get('width','?')}×{meta.get('height','?')}" if meta.get("width") else "—") +
-        kv_html("Durée",      f"{meta.get('duration_sec')} s" if meta.get("duration_sec") else "—") +
-        kv_html("FPS",        meta.get("fps")) +
-        kv_html("Taille",     size_str) +
-        kv_html("Hash MD5",   (doc.get("hash_md5") or "—")[:20] + "…" if doc.get("hash_md5") else "—") +
-        kv_html("Chemin local", url_local[:55] + "…" if len(url_local) > 55 else url_local),
-        unsafe_allow_html=True,
-    )
-
-    # ── Réutilisation ─────────────────────────────────────────────────────────
-    seen = reuse.get("seen_count", 1)
-    if seen > 1:
-        st.markdown(section("⚠️ Réutilisation (signal campagne)"), unsafe_allow_html=True)
-        platforms = reuse.get("platforms") or []
-        st.markdown(
-            f"<div style='color:#9a6700;font-weight:700;background:#fff8c5;"
-            f"border:1px solid #d4a72c;border-radius:4px;padding:6px 8px;'>"
-            f"Vu {seen}× sur {', '.join(platforms) or '—'}</div>",
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            kv_html("Première apparition", fmt_dt(reuse.get("first_seen_at"))),
-            unsafe_allow_html=True,
-        )
+            if path and path.exists():
+                if ext in IMAGE_EXTS:
+                    st.image(str(path), use_container_width=True)
+                elif ext in VIDEO_EXTS or ext == ".gif":
+                    data_uri, mime = load_media_b64(url_local)
+                    if data_uri:
+                        st.markdown(
+                            f"<video controls style='width:100%;border-radius:6px;margin-top:4px;'>"
+                            f"<source src='{data_uri}' type='{mime}'>"
+                            f"Navigateur incompatible.</video>",
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        st.warning(f"Impossible de charger le média {i+1}")
+                else:
+                    st.info(f"Type non prévisualisable : `{ext}`")
+            else:
+                st.caption(f"Fichier introuvable : `{url_local or '—'}`")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -738,7 +613,8 @@ def show_media_popup(url_local: str, media_type: str, doc: dict):
 # LAYOUT PRINCIPAL
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def main():
+def render():
+    st.markdown(_CSS, unsafe_allow_html=True)
     # ── Connexion ─────────────────────────────────────────────────────────────
     try:
         db = get_db()
@@ -751,8 +627,6 @@ def main():
         st.session_state.selected_id  = None
     if "selected_doc" not in st.session_state:
         st.session_state.selected_doc = None
-    if "col_switch"   not in st.session_state:
-        st.session_state.col_switch   = "posts"
     if "page"         not in st.session_state:
         st.session_state.page         = 0
 
@@ -763,30 +637,7 @@ def main():
         unsafe_allow_html=True,
     )
 
-    # ── Switch Posts / Médias ─────────────────────────────────────────────────
-    col_tab1, col_tab2, col_tab3 = st.columns([1, 1, 6])
-    with col_tab1:
-        if st.button(
-            "📝 Posts",
-            type="primary" if st.session_state.col_switch == "posts" else "secondary",
-            use_container_width=True,
-        ):
-            st.session_state.col_switch   = "posts"
-            st.session_state.selected_id  = None
-            st.session_state.selected_doc = None
-            st.session_state.page         = 0
-    with col_tab2:
-        if st.button(
-            "🖼️ Médias",
-            type="primary" if st.session_state.col_switch == "media" else "secondary",
-            use_container_width=True,
-        ):
-            st.session_state.col_switch   = "media"
-            st.session_state.selected_id  = None
-            st.session_state.selected_doc = None
-            st.session_state.page         = 0
-
-    col_name = st.session_state.col_switch
+    col_name = "posts"
 
     st.markdown("---")
 
@@ -857,15 +708,8 @@ def main():
         st.markdown("---")
 
         # Options spécifiques
-        if col_name == "posts":
-            search   = st.text_input("🔎 Recherche texte", key="f_search", placeholder="mot-clé…")
-            has_media = st.checkbox("Avec média uniquement", key="f_hmedia")
-        else:
-            search   = None
-            has_media = False
-            media_types = ["(tous)", "image", "video", "audio", "gif"]
-            mt = st.selectbox("Type de média", media_types, key="f_mtype")
-            media_type = None if mt == "(tous)" else mt
+        search    = st.text_input("🔎 Recherche texte", key="f_search", placeholder="mot-clé…")
+        has_media = st.checkbox("Avec média uniquement", key="f_hmedia")
 
         st.markdown("---")
         if st.button("🔄 Rafraîchir", use_container_width=True):
@@ -893,9 +737,9 @@ def main():
         "df_status":     df_status,
         "df_prediction": df_pred,
         "df_score_min":  df_score_min,
-        "search":        search if col_name == "posts" else None,
-        "has_media":     has_media if col_name == "posts" else False,
-        "media_type":    media_type if col_name == "media" else None,
+        "search":        search,
+        "has_media":     has_media,
+        "media_type":    None,
     }
 
     import json
@@ -968,7 +812,7 @@ def main():
                 unsafe_allow_html=True,
             )
         else:
-            card_fn = card_post if col_name == "posts" else card_media
+            card_fn = card_post
             for doc in docs:
                 doc_id   = str(doc.get("_id", ""))
                 selected = doc_id == st.session_state.selected_id
@@ -996,11 +840,14 @@ def main():
     with col_right:
         with st.container(border=True):
             selected_doc = st.session_state.selected_doc
-            if col_name == "posts":
-                render_post_detail(selected_doc)
-            else:
-                render_media_detail(selected_doc)
+            render_post_detail(selected_doc)
 
 
 if __name__ == "__main__":
-    main()
+    st.set_page_config(
+        page_title="AI Forensics Explorer",
+        page_icon="🔬",
+        layout="wide",
+        initial_sidebar_state="collapsed",
+    )
+    render()

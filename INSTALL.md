@@ -1,7 +1,6 @@
-# Guide d'installation — AI Forensics Pipeline
-## Environnement complet : pipeline deepfake + NLP + infrastructure
+# Guide d'installation — AI-FORENSICS Pipeline
 
-**Version** : v5.0 · Mars 2026 — deux environnements conda séparés + Anaconda  
+**Version** : v5.0 · Avril 2026  
 **Système cible** : Ubuntu 22.04 / 24.04 LTS  
 **Dossier racine du projet** : `~/AI-FORENSICS/`
 
@@ -11,35 +10,38 @@
 
 1. [Vue d'ensemble des environnements](#1-vue-densemble-des-environnements)
 2. [Prérequis système](#2-prérequis-système)
-3. [Installation d'Anaconda](#3-installation-danaconda)
-4. [Environnement conda `forensics`](#4-environnement-conda-forensics)
-5. [Environnement conda `nlp_pipeline`](#5-environnement-conda-nlp_pipeline)
-6. [Installation de MongoDB 8.0](#6-installation-de-mongodb-80)
-7. [Installation de Neo4j](#7-installation-de-neo4j)
-8. [Authentification HuggingFace](#8-authentification-huggingface)
-9. [Récupération du modèle Synthbuster](#9-récupération-du-modèle-synthbuster)
-10. [Récupération / création du modèle SwinV2 OpenFake](#10-récupération--création-du-modèle-swinv2-openfake)
-11. [Vérification de l'installation](#11-vérification-de-linstallation)
-12. [Configuration des fichiers `.env`](#12-configuration-des-fichiers-env)
-13. [Structure des dossiers du projet](#13-structure-des-dossiers-du-projet)
+3. [Cloner le dépôt](#3-cloner-le-dépôt)
+4. [Installation d'Anaconda](#4-installation-danaconda)
+5. [Environnement conda `forensics`](#5-environnement-conda-forensics)
+6. [Environnement conda `nlp_pipeline`](#6-environnement-conda-nlp_pipeline)
+7. [Environnement conda `www`](#7-environnement-conda-www)
+8. [Installation de MongoDB 8.0](#8-installation-de-mongodb-80)
+9. [Installation de Neo4j](#9-installation-de-neo4j)
+10. [Authentification HuggingFace](#10-authentification-huggingface)
+11. [Modèles deepfake](#11-modèles-deepfake)
+12. [Configuration du fichier `.env`](#12-configuration-du-fichier-env)
+13. [Vérification de l'installation](#13-vérification-de-linstallation)
+14. [Structure des dossiers du projet](#14-structure-des-dossiers-du-projet)
+15. [Paramétrage du dossier d'entrée (worker import)](#15-paramétrage-du-dossier-dentrée-worker-import)
 
 ---
 
 ## 1. Vue d'ensemble des environnements
 
-Le pipeline utilise **deux environnements conda distincts** pour isoler les dépendances incompatibles :
+Le pipeline utilise **deux environnements conda distincts** pour isoler des dépendances incompatibles :
 
 | Environnement | Workers | Python | PyTorch |
 |---|---|---|---|
-| `forensics` | detect_ai_pipeline + worker_import + supervisord | 3.11 | 2.6.0 CPU stable |
-| `nlp_pipeline` | nlp_worker + network_worker (+ neo4j + campaign_detector) | 3.11 | 2.6.0 (CPU ou GPU) |
+| `forensics` | detect_ai_pipeline | 3.11 | 2.6.0 CPU stable |
+| `nlp_pipeline` | nlp_worker + network_worker + campaign_detector + worker_import + supervisord | 3.11 | 2.6.0 (CPU ou GPU) |
+| `www` | forensics_explorer (Streamlit) | 3.11 | — |
 | `forensics_nightly` | Fine-tuning GPU RTX 50xx uniquement | 3.11 | nightly cu128 |
 
-**Pourquoi deux environnements ?**
+**Pourquoi deux environnements séparés ?**
 
-- `nlp_pipeline` requiert `sentence-transformers>=5.x` et `transformers>=5.x` pour les modèles de sentiment et d'embedding. Ces versions entrent en conflit avec les versions requises par le pipeline deepfake (`transformers>=4.40`).
-- `forensics` utilise `scikit-learn` via Synthbuster avec des contraintes de version différentes de celles du worker NLP.
-- `supervisord` tourne dans `forensics` et orchestre les deux environnements — chaque worker est lancé avec le binaire Python de son propre environnement.
+- `nlp_pipeline` requiert `sentence-transformers >= 5.x` et `transformers >= 5.x`, incompatibles avec les versions requises par le pipeline deepfake (`transformers >= 4.40`).
+- `forensics` utilise `scikit-learn` via Synthbuster avec des contraintes de version différentes.
+- `supervisord` tourne dans `nlp_pipeline` et orchestre les deux environnements — chaque worker est lancé avec le binaire Python de son propre environnement.
 
 ---
 
@@ -48,7 +50,6 @@ Le pipeline utilise **deux environnements conda distincts** pour isoler les dép
 ```bash
 sudo apt update && sudo apt upgrade -y
 
-# Dépendances système obligatoires
 sudo apt install -y \
     ffmpeg \
     git \
@@ -73,17 +74,28 @@ git --version
 | Python | 3.10 | 3.11 |
 | RAM | 8 Go | 16 Go (30 Go si workers NLP + deepfake en parallèle) |
 | Disque | 20 Go libres | 40 Go (modèles + datasets + médias) |
-| GPU | *(optionnel)* | NVIDIA CUDA 12.x (non RTX 50xx avec PyTorch stable) |
+| GPU | *(optionnel)* | NVIDIA CUDA 12.x — non compatible RTX 50xx avec PyTorch stable |
 
 ---
 
-## 3. Installation d'Anaconda
-
-> Si Anaconda est déjà installé sur la machine, passer directement à la section 4. Vérifier avec `conda --version`.
+## 3. Cloner le dépôt
 
 ```bash
-# Télécharger Anaconda (Linux x86_64) — version distribution complète
-wget https://repo.anaconda.com/archive/Anaconda3-latest-Linux-x86_64.sh -O anaconda.sh
+cd ~
+git clone --recurse-submodules https://github.com/kwiki74/AI-FORENSICS.git
+```
+
+L'option `--recurse-submodules` est indispensable pour récupérer le sous-module `synthbuster`.
+
+---
+
+## 4. Installation d'Anaconda
+
+> Si Anaconda est déjà installé, passer directement à la section 5. Vérifier avec `conda --version`.
+
+```bash
+# Télécharger Anaconda (Linux x86_64)
+wget https://repo.anaconda.com/archive/Anaconda3-2025.12-2-Linux-x86_64.sh -O anaconda.sh
 
 # Installer (chemin par défaut : ~/anaconda3)
 bash anaconda.sh -b -p $HOME/anaconda3
@@ -94,18 +106,22 @@ source ~/.bashrc
 
 # Vérification
 conda --version
-# Doit afficher : conda 24.x.x ou supérieur
+# Attendu : conda 24.x.x ou supérieur
+
+# Acceptation des Terms of Service
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 ```
 
-> **Différence Anaconda vs Miniconda :** Anaconda inclut une distribution scientifique complète (numpy, scipy, pandas, matplotlib, jupyter…) et l'interface graphique Anaconda Navigator. Miniconda est une installation minimale. Les deux fonctionnent avec ce pipeline ; Anaconda est recommandé pour un poste de travail dédié à l'analyse.
+> **Anaconda vs Miniconda :** Anaconda inclut une distribution scientifique complète (numpy, scipy, pandas, matplotlib, jupyter…). Miniconda est une installation minimale. Les deux fonctionnent avec ce pipeline ; Anaconda est recommandé pour un poste de travail dédié à l'analyse.
 
 ---
 
-## 4. Environnement conda `forensics`
+## 5. Environnement conda `forensics`
 
-Cet environnement fait tourner le **worker deepfake** (`detect_ai_pipeline-v4.0.3.py`), le **worker import** (`worker_import.py`), et `supervisord`.
+Cet environnement fait tourner uniquement le **worker deepfake** (`detect_ai_pipeline-v4.0.3.py`).
 
-### 4.1 Création et PyTorch
+### 5.1 Création et PyTorch
 
 ```bash
 conda create -n forensics python=3.11 -y
@@ -115,29 +131,23 @@ conda activate forensics
 Choisir **une** option PyTorch selon le matériel :
 
 ```bash
-# Option A — CPU uniquement (VM sans GPU) — recommandé pour installation initiale
-conda install pytorch==2.6.0 torchvision==0.21.0 cpuonly -c pytorch -y
+# Option A — CPU uniquement (recommandé pour installation initiale)
+conda install pytorch==2.6.0 torchvision cpuonly -c pytorch -y
 
 # Option B — GPU NVIDIA CUDA 12.x (hors RTX 50xx)
 # conda install pytorch==2.6.0 torchvision==0.21.0 pytorch-cuda=12.1 -c pytorch -c nvidia -y
 ```
 
-> **RTX 50xx (Blackwell sm_120) :** PyTorch stable ne supporte pas cette architecture. Utiliser `CUDA_VISIBLE_DEVICES=""` pour forcer le CPU, ou créer l'environnement `forensics_nightly` (section 4.4).
+> **RTX 50xx (Blackwell sm_120) :** PyTorch stable ne supporte pas cette architecture. Utiliser `CUDA_VISIBLE_DEVICES=""` pour forcer le CPU, ou créer l'environnement `forensics_nightly` (section 5.4).
 
-### 4.2 Installation des dépendances
+### 5.2 Installation des dépendances
 
 ```bash
 cd ~/AI-FORENSICS
 pip install -r requirements_forensics.txt
 ```
 
-### 4.3 Dossier RESULT
-
-```bash
-mkdir -p ~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/RESULT
-```
-
-### 4.4 Vérification de l'environnement `forensics`
+### 5.3 Vérification de l'environnement `forensics`
 
 ```bash
 conda activate forensics
@@ -187,7 +197,7 @@ else:
 "
 ```
 
-### 4.5 Variante GPU RTX 50xx — environnement `forensics_nightly`
+### 5.4 Variante GPU RTX 50xx — environnement `forensics_nightly`
 
 > Uniquement pour le fine-tuning SwinV2 sur GPU RTX 5070/5080/5090.
 
@@ -204,11 +214,11 @@ python -c "import torch; print('CUDA:', torch.cuda.is_available(), '| Device:', 
 
 ---
 
-## 5. Environnement conda `nlp_pipeline`
+## 6. Environnement conda `nlp_pipeline`
 
-Cet environnement fait tourner le **worker NLP** (`nlp_worker.py`) et le **worker réseau** (`network_worker.py`).
+Cet environnement fait tourner le **worker NLP** (`nlp_worker.py`), le **worker réseau** (`network_worker.py`), le **worker import** (`worker_import.py`).
 
-### 5.1 Création et PyTorch
+### 6.1 Création et PyTorch
 
 ```bash
 conda create -n nlp_pipeline python=3.11 -y
@@ -225,16 +235,16 @@ conda install pytorch==2.6.0 cpuonly -c pytorch -y
 # conda install pytorch==2.6.0 pytorch-cuda=12.1 -c pytorch -c nvidia -y
 ```
 
-### 5.2 Installation des dépendances
+### 6.2 Installation des dépendances
 
-`hdbscan` doit être installé via conda avant pip pour éviter les erreurs de compilation :
+`hdbscan` doit être installé via conda **avant** pip pour éviter les erreurs de compilation :
 
 ```bash
 conda install -c conda-forge hdbscan -y
-pip install -r ~/AI-FORENSICS/WORKER/NLP/requirements_nlp.txt
+pip install -r ~/AI-FORENSICS/requirements_générique.txt
 ```
 
-### 5.3 Vérification de l'environnement `nlp_pipeline`
+### 6.3 Vérification de l'environnement `nlp_pipeline`
 
 ```bash
 conda activate nlp_pipeline
@@ -276,7 +286,7 @@ if ko:
     print('=== PACKAGES MANQUANTS ===')
     for l in ko: print(l)
     print()
-    print('Relancer : pip install -r ~/AI-FORENSICS/WORKER/NLP/requirements_nlp.txt')
+    print('Relancer : pip install -r ~/AI-FORENSICS/requirements_générique.txt')
 else:
     print()
     print('Tous les packages sont installés ✓')
@@ -285,11 +295,27 @@ else:
 
 ---
 
-## 6. Installation de MongoDB 8.0
+## 7. Environnement conda `www`
+
+Environnement minimal pour l'interface Streamlit spécifique à AI-FORENSICS. cette interface web est utilisé pour le contrôle en isolé de la solution.
+
+```bash
+conda create -n www python=3.11 -y
+conda activate www
+
+pip install streamlit
+pip install neo4j
+pip install python-dotenv
+pip install pymongo
+```
+
+---
+
+## 8. Installation de MongoDB 8.0
 
 MongoDB est la **base de vérité** du pipeline. Le mode ReplicaSet est obligatoire pour les Change Streams utilisés par les workers NLP et réseau.
 
-### 6.1 Installation
+### 8.1 Installation
 
 ```bash
 curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | \
@@ -306,15 +332,20 @@ sudo systemctl enable mongod
 sudo systemctl status mongod
 ```
 
-### 6.2 Activation du ReplicaSet
+### 8.2 Activation du ReplicaSet
 
-**⚠ Faire AVANT d'activer l'authentification.**
+Le **ReplicaSet** est un mécanisme de MongoDB qui maintient plusieurs copies synchronisées d'une même base de données. Dans une configuration classique, un nœud est désigné **primary** (il reçoit toutes les écritures) et les autres sont des **secondary** (ils répliquent les données en temps réel).
+
+Dans le cadre de ce projet, on n'utilise qu'un seul nœud — donc le ReplicaSet ne sert pas à la haute disponibilité. On l'active pour une autre raison : les **Change Streams**. Cette fonctionnalité MongoDB permet à un script Python de s'abonner à un flux d'événements en temps réel ("un document vient d'être inséré dans `posts`") sans avoir à interroger la base en boucle. Les workers NLP et réseau en dépendent pour traiter les contenus au fil de l'eau, dès leur insertion par le worker import. Or MongoDB n'autorise les Change Streams **que** sur une instance en mode ReplicaSet — même à un seul membre.
+
+
+> ⚠ Effectuer **avant** d'activer l'authentification.
 
 ```bash
 sudo nano /etc/mongod.conf
 ```
 
-Ajouter à la fin :
+Ajouter à la fin du fichier :
 
 ```yaml
 replication:
@@ -323,9 +354,10 @@ replication:
 
 ```bash
 sudo systemctl restart mongod
-
 mongosh
 ```
+
+Dans mongosh :
 
 ```javascript
 rs.initiate({
@@ -336,7 +368,7 @@ rs.initiate({
 exit
 ```
 
-### 6.3 Création du keyFile
+### 8.3 Création du keyFile
 
 ```bash
 sudo openssl rand -base64 756 > /tmp/mongodb-keyfile
@@ -345,7 +377,7 @@ sudo chown mongodb:mongodb /etc/mongodb-keyfile
 sudo chmod 400 /etc/mongodb-keyfile
 ```
 
-### 6.4 Création des utilisateurs
+### 8.4 Création des utilisateurs
 
 Se connecter **avant** d'activer l'authentification :
 
@@ -356,23 +388,23 @@ mongosh
 > ⚠ Exécuter les commandes **une par une** dans mongosh.
 
 ```javascript
-// 1
+// 1 — Passer sur la base admin
 use admin
 
-// 2
+// 2 — Créer l'utilisateur admin
 db.createUser({
   user: "admin",
   pwd: "VOTRE_MOT_DE_PASSE_ADMIN",
   roles: [{ role: "root", db: "admin" }]
 })
 
-// 3
+// 3 — Passer sur la base applicative
 use influence_detection
 
-// 4
+// 4 — Créer l'utilisateur applicatif
 db.createUser({
   user: "influence_app",
-  pwd: "AiForens!cS1",
+  pwd: "VOTRE_MOT_DE_PASSE_APP",
   roles: [{ role: "readWrite", db: "influence_detection" }]
 })
 
@@ -380,11 +412,13 @@ db.createUser({
 exit
 ```
 
-### 6.5 Activation de l'authentification
+### 8.5 Activation de l'authentification
 
 ```bash
 sudo nano /etc/mongod.conf
 ```
+
+Ajouter :
 
 ```yaml
 security:
@@ -397,13 +431,13 @@ security:
 ```bash
 sudo systemctl restart mongod
 
-# Test — guillemets simples obligatoires (le ! est interprété par bash)
-mongosh -u influence_app -p 'AiForens!cS1' \
+# Test de connexion (guillemets simples obligatoires si le mot de passe contient !)
+mongosh -u influence_app -p 'VOTRE_MOT_DE_PASSE_APP' \
     --authenticationDatabase influence_detection \
     --eval "db.runCommand({ping:1})"
 ```
 
-### 6.6 Création des index MongoDB
+### 8.6 Création des index MongoDB
 
 > ⚠ Lancer depuis `~/AI-FORENSICS/` pour que `schema.py` trouve le `.env`.
 
@@ -412,25 +446,18 @@ conda activate forensics
 cd ~/AI-FORENSICS
 python -c "
 from SCHEMA.schema import get_db, create_indexes
-db = get_db(
-    host='localhost',
-    port=27017,
-    user='influence_app',
-    password='AiForens!cS1',
-    db_name='influence_detection',
-    auth_db='influence_detection'
-)
+db = get_db()
 create_indexes(db)
 print('Index créés ✓')
 "
 ```
 
-### 6.7 Erreur `E11000 duplicate key — hash_md5: null`
+### 8.7 Correction de l'index `hash_md5_1` (si erreur E11000)
 
-Si le worker import remonte cette erreur lors de l'insertion de médias, l'index `hash_md5_1` a été créé sans `partialFilterExpression` (ancienne définition). Le corriger en base :
+Si le worker import remonte `E11000 duplicate key — hash_md5: null`, l'index `hash_md5_1` a été créé sans `partialFilterExpression`. Le corriger :
 
 ```bash
-mongosh -u influence_app -p 'AiForens!cS1' \
+mongosh -u influence_app -p 'VOTRE_MOT_DE_PASSE_APP' \
     --authenticationDatabase influence_detection
 ```
 
@@ -448,15 +475,15 @@ db.media.createIndex(
 exit
 ```
 
-> Le `schema.py` patché détecte automatiquement ce cas et recréé l'index correctement à chaque appel de `create_indexes()`.
+> Le `schema.py` patché détecte et corrige automatiquement ce cas à chaque appel de `create_indexes()`.
 
 ---
 
-## 7. Installation de Neo4j
+## 9. Installation de Neo4j
 
 Neo4j est utilisé pour l'analyse des relations entre comptes et la détection de campagnes coordonnées.
 
-### 7.1 Installation
+### 9.1 Installation
 
 ```bash
 wget -O - https://debian.neo4j.com/neotechnology.gpg.key | sudo gpg --dearmor \
@@ -472,24 +499,31 @@ sudo systemctl enable neo4j
 sudo systemctl status neo4j
 ```
 
-### 7.2 Configuration initiale
+### 9.2 Configuration initiale
 
 ```bash
 cypher-shell -u neo4j -p neo4j
 ```
 
+Généralement, le changement de mot de passe est demandé automatiquement. Si ce n'est pas le cas : 
 ```cypher
-ALTER CURRENT USER SET PASSWORD FROM 'neo4j' TO 'influence2026!';
+ALTER CURRENT USER SET PASSWORD FROM 'neo4j' TO 'VOTRE_MOT_DE_PASSE_NEO4J';
 ```
 
-Quitter avec **Ctrl+D**. Interface web : http://localhost:7474
+Quitter avec **Ctrl+D**. Interface web disponible sur : http://localhost:7474
 
-### 7.3 Installation de GDS (Graph Data Science) — optionnel mais recommandé
+### 9.3 Installation de GDS (Graph Data Science)
+
+Le plugin GDS est requis pour la détection de campagnes (Louvain, PageRank). Sans lui, positionner `skip_gds = true` dans `WORKER/NETWORK/network_pipeline.cfg`.
 
 ```bash
+# Vérifier si le plugin est présent
 find /var/lib/neo4j -name "neo4j-graph-data-science-*.jar" 2>/dev/null
+
+# Copier dans le dossier plugins
 sudo cp /var/lib/neo4j/products/neo4j-graph-data-science-*.jar /var/lib/neo4j/plugins/
 
+# Autoriser les procédures GDS
 sudo nano /etc/neo4j/neo4j.conf
 # Ajouter :
 # dbms.security.procedures.unrestricted=gds.*
@@ -498,11 +532,11 @@ sudo nano /etc/neo4j/neo4j.conf
 sudo systemctl restart neo4j
 ```
 
-> Si GDS n'est pas installé, positionner `skip_gds = true` dans `WORKER/NETWORK/network_pipeline.cfg`.
-
 ---
 
-## 8. Authentification HuggingFace
+## 10. Authentification HuggingFace
+
+Optionnel, mais recommandé pour éviter les avertissements de rate-limiting.
 
 ```bash
 mkdir -p ~/.huggingface
@@ -510,56 +544,33 @@ echo "hf_VOTRE_TOKEN_ICI" > ~/.huggingface/token
 chmod 600 ~/.huggingface/token
 ```
 
-> Créer un token sur https://huggingface.co (lecture seule suffit). Ne jamais committer le token.
+> Créer un token lecture seule sur https://huggingface.co. Ne jamais committer ce fichier.
 
 ---
 
-## 9. Récupération du modèle Synthbuster
+## 11. Modèles deepfake
 
+### Synthbuster
+
+Le sous-module est cloné automatiquement avec `--recurse-submodules`. Si vous disposez de  fichiers de modèle entraîné, copiez les dans les dossier `~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/synthbuster/models/` puis effectuez ces commandes :
 ```bash
-cd ~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE
-git clone https://github.com/qbammey/synthbuster synthbuster
-```
-
-Copier les fichiers de modèle entraîné depuis l'ancien PC :
-
-```bash
-scp USER@ANCIEN_PC:~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/synthbuster/models/model_jpeg.joblib \
-    ~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/synthbuster/models/
-scp USER@ANCIEN_PC:~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/synthbuster/models/config_jpeg.json \
-    ~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/synthbuster/models/
-
 # Créer les liens symboliques si absents
 cd ~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/synthbuster/models/
 ln -sf model_jpeg.joblib model.joblib
 ln -sf config_jpeg.json config.json
 ```
 
----
+### SwinV2 OpenFake
 
-## 10. Récupération / création du modèle SwinV2 OpenFake
+Le modèle est **téléchargé automatiquement** lors de la première exécution du pipeline deepfake (dans un sous-dossier d'Anaconda).
 
-### Option A — Copier depuis l'ancien PC (recommandé)
-
-```bash
-scp -r USER@ANCIEN_PC:~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/swinv2_openfake/ \
-    ~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/
-
-# Vérifier : doit contenir model.safetensors (~100 Mo) + config.json
-ls -lh ~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/swinv2_openfake/
-
-# Copier aussi le .cfg calibré
-scp USER@ANCIEN_PC:~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/ai_forensics.cfg \
-    ~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/
-```
-
-### Option B — Fine-tuner SwinV2 depuis le backbone de base
+**Fine-tuning optionnel** — résultats de référence (effectué sur une dataset ~99 000 images): 
+F1 = 0.943 · Precision = 0.938 · MCC = 0.886 
 
 ```bash
+# CPU (recommandé hors GPU Blackwell)
 conda activate forensics
 cd ~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE
-
-# CPU (forcer désactivation GPU pour éviter le warning sm_120)
 CUDA_VISIBLE_DEVICES="" python fine_tune_swinv2.py \
     --data-dir ~/DATASET/calib_dataset \
     --output-dir ./swinv2_openfake \
@@ -574,29 +585,55 @@ python fine_tune_swinv2.py \
     --epochs 10 --batch-size 16 --num-workers 8 --verbose
 ```
 
-**Résultats obtenus sur notre fine-tuning de référence :**
+---
 
-| Métrique | Acceptable | Bon | Notre résultat |
-|---|---|---|---|
-| F1 | > 0.65 | > 0.75 | **0.943** |
-| Precision | > 0.70 | > 0.80 | **0.938** |
-| MCC | > 0.35 | > 0.50 | **0.886** |
+## 12. Configuration du fichier `.env`
+
+Le fichier `.env` à la racine du projet centralise toutes les credentials.
+
+```bash
+cd ~/AI-FORENSICS
+cp .env.example .env
+nano .env   # renseigner les mots de passe définis aux sections 8 et 9
+```
+
+Contenu du `.env.example` fourni :
+
+```ini
+# --- MongoDB (compte applicatif — utilisé par tous les workers) ---
+MONGO_HOST=localhost
+MONGO_PORT=27017
+MONGO_USER=influence_app
+MONGO_PASSWORD=CHANGER_MOI
+MONGO_DB=influence_detection
+MONGO_AUTH_DB=influence_detection
+
+# --- MongoDB (compte admin — utilisé uniquement par schema.py create_indexes) ---
+MONGO_ADMIN_USER=admin
+MONGO_ADMIN_PASSWORD=CHANGER_MOI
+
+# --- Neo4j (utilisé par le worker NETWORK) ---
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=CHANGER_MOI
+```
+
+> ⚠ Le fichier `.env` est exclu du dépôt Git via `.gitignore`. Ne jamais le committer.
 
 ---
 
-## 11. Vérification de l'installation
+## 13. Vérification de l'installation
 
-### Test deepfake one-shot
+### Test worker deepfake
+
+> Lors du **premier démarrage**, le worker télécharge les modèles HuggingFace. Le temps d'exécution est donc plus long.
 
 ```bash
 conda activate forensics
 cd ~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE
 
 # CUDA_VISIBLE_DEVICES="" force le CPU et supprime le warning sm_120 (RTX 50xx)
-CUDA_VISIBLE_DEVICES="" python detect_ai_pipeline-v4.0.3.py \
-    ~/AI-FORENSICS/DATA_IN \
-    --ensemble --workers 2 --verbose \
-    --output RESULT/results.csv
+CUDA_VISIBLE_DEVICES="" python detect_ai_pipeline-v4.0.3.py --mongojob --workers 1 --verbose
 ```
 
 **Sortie attendue :** `Modèles prêts : 3/3, échecs : aucun`
@@ -609,73 +646,90 @@ cd ~/AI-FORENSICS/WORKER/NLP
 python nlp_worker.py --dry-run
 ```
 
+L'option `--dry-run` simule le fonctionnement sans modifier la base.
+
+**Sortie attendue (extrait) :**
+
+```
+[INFO] nlp_worker — === Worker NLP démarré (dry_run=True) ===
+[INFO] nlp_worker — MongoDB connecté : influence_detection
+[INFO] nlp_worker — SentimentAnalyzer prêt (device=cpu)
+[INFO] nlp_worker — EmbeddingEngine prêt
+[INFO] nlp_worker — Écoute Change Streams sur : posts, comments
+```
+
 ### Test MongoDB
 
 ```bash
-mongosh -u influence_app -p 'AiForens!cS1' \
+mongosh -u influence_app -p 'VOTRE_MOT_DE_PASSE_APP' \
     --authenticationDatabase influence_detection \
     --eval "db.runCommand({ping:1})"
 ```
 
+**Sortie attendue :** `{ ok: 1, ... }`
+```bash
+    --authenticationDatabase influence_detection \
+    --eval "db.runCommand({ping:1})"
+{
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1775207042, i: 1 }),
+    signature: {
+      hash: Binary.createFromBase64('MLAAZtn4lYYv7B61A98lxPyL/0Y=', 0),
+      keyId: Long('7624445898277257223')
+    }
+  },
+  operationTime: Timestamp({ t: 1775207042, i: 1 })
+}
+
+```
 ### Test Neo4j
 
 ```bash
-cypher-shell -u neo4j -p 'influence2026!' \
+cypher-shell -u neo4j -p 'VOTRE_MOT_DE_PASSE_NEO4J' \
     "MATCH (n) RETURN count(n) AS total_noeuds"
 ```
 
-**Warnings normaux et sans impact :**
+**Sortie attendue :**
+
+```
++--------------+
+| total_noeuds |
++--------------+
+| 0            |
++--------------+
+1 row
+```
+
+### Warnings normaux et sans impact
 
 | Warning | Cause | Action |
 |---|---|---|
-| `libc10_cuda.so: cannot open shared object file` | Extension CUDA absente sur VM sans GPU | Ignorer |
+| `libc10_cuda.so: cannot open shared object file` | Extension CUDA absente en mode CPU | Ignorer |
 | `torchvision.datapoints [...] still Beta` | APIs bêta internes à torchvision | Ignorer |
 | `ViTImageProcessor is now loaded as a fast processor` | Comportement transformers 4.x/5.x | Ignorer |
-| `unauthenticated requests to the HF Hub` | Token HuggingFace non configuré | Configurer token (section 8) ou ignorer |
-| `resource_tracker: leaked semaphore` | Artefact multiprocessing — disparaît une fois RESULT/ créé | Créer le dossier RESULT/ |
+| `unauthenticated requests to the HF Hub` | Token HuggingFace non configuré | Configurer (section 10) ou ignorer |
+| `resource_tracker: leaked semaphore` | Artefact multiprocessing — disparaît si RESULT/ existe | Créer le dossier `RESULT/` |
 | `NVIDIA RTX 50xx sm_120 not compatible` | GPU Blackwell non supporté par PyTorch stable | Utiliser `CUDA_VISIBLE_DEVICES=""` |
 
 ---
 
-## 12. Configuration des fichiers `.env`
-
-```bash
-nano ~/AI-FORENSICS/.env
-```
-
-```env
-# MongoDB
-MONGO_HOST=localhost
-MONGO_PORT=27017
-MONGO_USER=influence_app
-MONGO_PASSWORD=AiForens!cS1
-MONGO_DB=influence_detection
-MONGO_AUTH_DB=influence_detection
-```
-
-> Les workers lisent en priorité les fichiers `.cfg` de leur dossier. Le `.env` sert de fallback pour `schema.py`.
-
----
-
-## 13. Structure des dossiers du projet
+## 14. Structure des dossiers du projet
 
 ```
 ~/AI-FORENSICS/
 ├── CONTEXT/
-│   ├── CONTEXT_NEXT_CHAT.md        ← contexte projet (pour reprise de session)
+│   ├── CONTEXT_NEXT_CHAT.md        ← contexte projet (reprise de session)
 │   ├── Neo4j_Guide_Analyse.md      ← requêtes Cypher d'analyse
 │   └── pipeline_architecture.html  ← schéma interactif de l'architecture
 │
-├── DATA_IN/                        ← JSON scrappés (inbox worker import)
-│
 ├── SCHEMA/
-│   └── schema.py                   ← schéma MongoDB v3 + patch hash_md5_1 (source canonique)
+│   └── schema.py                   ← schéma MongoDB v3 (source canonique)
 │
 ├── SUPERVISOR/
-│   ├── supervisord.conf            ← configuration supervisord (2 envs, 4 workers)
+│   ├── supervisord.conf            ← configuration supervisord
 │   ├── launch_workspace.sh
 │   ├── terminator_layout.conf
-│   ├── INSTALL_WORKSPACE.md
 │   └── t1_supervision.sh … t5_reseau.sh
 │
 ├── WORKER/
@@ -684,9 +738,9 @@ MONGO_AUTH_DB=influence_detection
 │   │   ├── ai_forensics.cfg
 │   │   ├── fine_tune_swinv2.py
 │   │   ├── calib_report_v4.json
-│   │   ├── requirements_forensics.txt  ← dépendances env forensics
-│   │   ├── swinv2_openfake/
-│   │   ├── synthbuster/
+│   │   ├── requirements_forensics.txt
+│   │   ├── swinv2_openfake/        ← modèle fine-tuné (non versionné)
+│   │   ├── synthbuster/            ← sous-module git
 │   │   └── RESULT/
 │   │
 │   ├── IMPORT/                     ← env : forensics
@@ -701,7 +755,7 @@ MONGO_AUTH_DB=influence_detection
 │   │   ├── embeddings.py
 │   │   ├── narrative_clustering.py
 │   │   ├── nlp_pipeline.cfg
-│   │   └── requirements_nlp.txt    ← dépendances env nlp_pipeline
+│   │   └── requirements_nlp.txt
 │   │
 │   └── NETWORK/                    ← env : nlp_pipeline
 │       ├── network_worker.py
@@ -713,30 +767,20 @@ MONGO_AUTH_DB=influence_detection
 │   └── forensics_explorer.py       ← interface Streamlit
 │
 ├── logs/
-└── .env                            ← credentials (ne pas committer dans git)
+├── .env                            ← credentials (ne pas committer)
+├── .env.example                    ← modèle fourni
+└── .gitignore
 ```
 
-### Configuration `supervisord.conf` — deux environnements
+---
 
-Les workers sont lancés avec le binaire Python de leur environnement respectif :
+## 15. Paramétrage du dossier d'entrée (worker import)
+
+Pour configurer le dossier source du worker import, modifier `~/AI-FORENSICS/WORKER/IMPORT/worker_import.cfg` :
 
 ```ini
-[program:worker_import]
-command=%(ENV_HOME)s/anaconda3/envs/forensics/bin/python worker_import.py
-directory=%(ENV_HOME)s/AI-FORENSICS/WORKER/IMPORT
-
-[program:detect_ai]
-command=%(ENV_HOME)s/anaconda3/envs/forensics/bin/python detect_ai_pipeline-v4.0.3.py --mongojob --workers 1
-environment=CUDA_VISIBLE_DEVICES=""
-directory=%(ENV_HOME)s/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE
-
-[program:nlp_worker]
-command=%(ENV_HOME)s/anaconda3/envs/nlp_pipeline/bin/python nlp_worker.py
-directory=%(ENV_HOME)s/AI-FORENSICS/WORKER/NLP
-
-[program:network_worker]
-command=%(ENV_HOME)s/anaconda3/envs/nlp_pipeline/bin/python network_worker.py
-directory=%(ENV_HOME)s/AI-FORENSICS/WORKER/NETWORK
+# Mode source directe : pointe sur DOSSIER_INPUT.
+# Le worker scanne récursivement ce dossier SANS déplacer les fichiers.
+# Laisser vide pour utiliser le mode inbox/ normal.
+source_dir = /chemin/vers/votre/dossier_input
 ```
-
-> `conda info --base` affiche le chemin de base Anaconda si `anaconda3` diffère sur votre machine.
