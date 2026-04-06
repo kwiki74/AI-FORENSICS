@@ -6,8 +6,7 @@
 **Vidéo de présentation :** https://youtu.be/95AWVQPc-ss
 
 
-> Travail réalisé dans le cadre du mastère spécialisé cyberdéfense / cybersécurit de **Telecom Paris** [Telecom Paris](https://www.telecom-paris.fr/)
-> Pour le cours CYBER721-Réseaux et Organisation de donénes : intelligence et sécurité
+> Travail réalisé dans le cadre du mastère spécialisé cyberdéfense / cybersécurit de [Telecom Paris](https://www.telecom-paris.fr/) pour le cours **CYBER721-Réseaux et Organisation de donénes : intelligence et sécurité**.
 
 > La solution AI-FORENSICS constitue la motié d'une solution gobale, réalisée dans le cadre d'un projet de Cyber Threat Intelligence & OSIONT dont le sujet était **Deeopfakes & Opérations d'Influence**. 
 
