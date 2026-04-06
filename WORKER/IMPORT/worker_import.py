@@ -117,7 +117,7 @@ for _schema_dir in _SCHEMA_CANDIDATES:
 try:
     from schema import (
         get_db, new_account, new_post, new_comment, new_media, new_job,
-        patch_post_media, patch_media_sync, PLATFORMS,
+        patch_post_media, patch_media_reuse, patch_media_sync, PLATFORMS,
     )
 except ImportError as e:
     print(f"[ERREUR] Impossible d'importer schema.py : {e}")
@@ -940,6 +940,8 @@ def build_and_insert_media(
             "downloaded":   True,
         }
         db.posts.update_one({"_id": post_id}, patch_post_media(media_ref))
+        # Lien inverse média → post (reuse.post_ids)
+        db.media.update_one({"_id": media_id}, patch_media_reuse(post_id, platform))
 
         # Job deepfake_analysis — idempotent sur (post_id, url_local)
         db.jobs.update_one(
