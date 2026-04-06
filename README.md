@@ -6,11 +6,11 @@
 **Vidéo de présentation :** https://youtu.be/95AWVQPc-ss
 
 
-> Travail réalisé dans le cadre du mastère spécialisé cyberdéfense / cybersécurit de [Telecom Paris](https://www.telecom-paris.fr/) pour le cours **CYBER721-Réseaux et Organisation de donénes : intelligence et sécurité**.
+> Travail réalisé dans le cadre du mastère spécialisé cyberdéfense / cybersécurité de [Telecom Paris](https://www.telecom-paris.fr/) pour le cours **CYBER721-Réseaux et Organisation de données : intelligence et sécurité**.
 
-> La solution AI-FORENSICS constitue la motié d'une solution gobale, réalisée dans le cadre d'un projet de Cyber Threat Intelligence & OSIONT dont le sujet était **Deeopfakes & Opérations d'Influence**. 
+> La solution AI-FORENSICS constitue la moitié d'une solution globale, réalisée dans le cadre d'un projet de Cyber Threat Intelligence & OSINT dont le sujet était **Deepfakes & Opérations d'Influence**.
 
-> Les scripts de la solution AI-FORENSIC on été codés avec l'aide de *Claude-Code*.
+> Les scripts de la solution AI-FORENSICS ont été codés avec l'aide de *Claude-Code*.
 ---
 
 ## Table des matières
@@ -72,7 +72,7 @@ worker_import.py                    ← normalisation, insertion MongoDB, créat
     |
     ▼
 network_worker.py                   ← ETL MongoDB→Neo4j + détection de campagnes
-    │                                 (peux également fonctionner avec les change streams)  
+    │                                 (peut également fonctionner avec les change streams)
     ▼
 Neo4j GDS                           ← graphe de relations, communautés Louvain, PageRank
 ```
