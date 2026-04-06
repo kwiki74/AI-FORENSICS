@@ -6,7 +6,7 @@
 **Vidéo de présentation :** https://youtu.be/95AWVQPc-ss
 
 
-> Travail réalisé dans le cadre du mastère spécialisé cyberdéfense / cybersécurit de **Telecom Paris**
+> Travail réalisé dans le cadre du mastère spécialisé cyberdéfense / cybersécurit de **Telecom Paris** [Telecom Paris](https://www.telecom-paris.fr/)
 > Pour le cours CYBER721-Réseaux et Organisation de donénes : intelligence et sécurité
 
 > La solution AI-FORENSICS constitue la motié d'une solution gobale, réalisée dans le cadre d'un projet de Cyber Threat Intelligence & OSIONT dont le sujet était **Deeopfakes & Opérations d'Influence**. 
@@ -36,7 +36,7 @@
    - [network_worker.py](#64-network_workerpy)
 7. [Outils annexes](#7-outils-annexes)
 8. [Structure du dépôt](#8-structure-du-dépôt)
-9. [Configuration](#9-configuration)
+9. [Credentials](#9-credentials)
 
 ---
 
