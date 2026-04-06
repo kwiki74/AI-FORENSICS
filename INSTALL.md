@@ -297,7 +297,7 @@ else:
 
 ## 7. Environnement conda `www`
 
-Environnement minimal pour l'interface Streamlit spécifique à AI-FORENSICS. cette interface web est utilisé pour le contrôle en isolé de la solution.
+Environnement minimal pour l'interface Streamlit spécifique à AI-FORENSICS. Cette interface web est utilisée pour le contrôle en isolé de la solution.
 
 ```bash
 conda create -n www python=3.11 -y
@@ -310,10 +310,10 @@ pip install pymongo
 pip install psutil
 ```
 
-Une fois l'installation completement terminer, vous pouvez lancer la page de cette manière : 
+Une fois l'installation complètement terminée, vous pouvez lancer la page de cette manière :
 
 ```bash
-#activation de l'environement
+#activation de l'environnement
 conda activate www
 
 #lancement de la page via streamlit (attention, la commande ne rends pas la main)
@@ -566,7 +566,7 @@ chmod 600 ~/.huggingface/token
 
 ### Synthbuster
 
-Le sous-module est cloné automatiquement avec `--recurse-submodules`. Si vous disposez de  fichiers de modèle entraîné, copiez les dans les dossier `~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/synthbuster/models/` puis effectuez ces commandes :
+Le sous-module est cloné automatiquement avec `--recurse-submodules`. Si vous disposez de fichiers de modèle entraîné, copiez-les dans le dossier `~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/synthbuster/models/` puis effectuez ces commandes :
 ```bash
 # Créer les liens symboliques si absents
 cd ~/AI-FORENSICS/WORKER/DETECT_AI_PIPLINE/synthbuster/models/
@@ -578,7 +578,7 @@ ln -sf config_jpeg.json config.json
 
 Le modèle est **téléchargé automatiquement** lors de la première exécution du pipeline deepfake (dans un sous-dossier d'Anaconda).
 
-**Fine-tuning optionnel** — résultats de référence (effectué sur une dataset ~99 000 images): 
+**Fine-tuning optionnel** — résultats de référence (effectué sur un dataset ~99 000 images) :
 F1 = 0.943 · Precision = 0.938 · MCC = 0.886 
 
 ```bash
