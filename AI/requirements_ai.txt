@@ -1,0 +1,24 @@
+# requirements_ai.txt — Module AI/ (agent d'investigation)
+# Environnement conda : AI_agent
+# Installation : pip install -r requirements_ai.txt
+
+# --- Framework agent ---
+langchain>=0.2.0
+langchain-community>=0.2.0
+langgraph>=0.2.0               # remplace AgentExecutor (LangChain 1.x)
+langchain-ollama>=0.1.0       # pour Ollama local
+langchain-groq>=0.1.0         # optionnel — Groq API
+langchain-anthropic>=0.1.0    # optionnel — Anthropic API
+pydantic>=2.0.0
+
+# --- Clients LLM ---
+ollama>=0.2.0                 # client Ollama Python
+
+# --- Déjà dans requirements.txt principal — ne pas redéclarer ---
+# pymongo
+# python-dotenv
+# neo4j
+
+# Pour les Graph du rapport :
+matplotlib 
+pyvis

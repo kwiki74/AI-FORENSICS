@@ -3,7 +3,7 @@
 > Détection automatique d'images et vidéos générées par IA sur les réseaux sociaux,  
 > analyse linguistique des publications et identification de campagnes d'influence coordonnées.
 
-**Vidéo de présentation :** https://youtu.be/95AWVQPc-ss
+**Vidéo de présentation :** https://www.youtube.com/watch?v=Ya0dehY3C6k&t=396s
 
 
 > Travail réalisé dans le cadre du mastère spécialisé cyberdéfense / cybersécurité de [Telecom Paris](https://www.telecom-paris.fr/) pour le cours **CYBER721-Réseaux et Organisation de données : intelligence et sécurité**.
@@ -339,6 +339,8 @@ Worker d'analyse linguistique des publications. Opère en mode stream sur la col
 **Clustering narratif** (déclenché périodiquement) : l'algorithme **HDBSCAN** regroupe les publications par proximité sémantique sans hypothèse préalable sur le nombre de clusters. Chaque cluster devient une `narrative` en base, caractérisée par ses mots-clés, les plateformes impliquées et la proportion de médias synthétiques parmi les posts associés.
 
 **Résultats écrits en base :** `patch_post_nlp()` enrichit le document post avec le sentiment score, l'embedding, et la référence narrative.
+
+**Option utile** : Le mode `--backfill`  traite tous les posts/comments existants avec nlp.status = "pending" avant de basculer en écoute Change Stream. (si le worker nlp est mis en route arpès le worker d'import).
 
 **Dépendances :**
 

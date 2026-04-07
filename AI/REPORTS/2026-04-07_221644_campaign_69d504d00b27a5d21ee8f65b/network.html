@@ -1,0 +1,175 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 600px;
+                 background-color: #1a1a2e;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#2ecc71", "font": {"color": "white"}, "id": "hugobossai", "label": "@hugobossai", "shape": "dot", "size": 18, "title": "@hugobossai (tiktok)\u003cbr\u003ePosts: 24\u003cbr\u003eCommunaut\u00e9: 22"}, {"color": "#3498db", "font": {"color": "white"}, "id": "ardenmerov", "label": "@ardenmerov", "shape": "dot", "size": 18, "title": "@ardenmerov (tiktok)\u003cbr\u003ePosts: 23\u003cbr\u003eCommunaut\u00e9: 11"}, {"color": "#f39c12", "font": {"color": "white"}, "id": "jbmerov", "label": "@jbmerov", "shape": "dot", "size": 18, "title": "@jbmerov (tiktok)\u003cbr\u003ePosts: 10\u003cbr\u003eCommunaut\u00e9: 23"}, {"color": "#00bcd4", "font": {"color": "white"}, "id": "agamaclub", "label": "@agamaclub", "shape": "dot", "size": 18, "title": "@agamaclub (tiktok)\u003cbr\u003ePosts: 4\u003cbr\u003eCommunaut\u00e9: 9"}, {"color": "#3498db", "font": {"color": "white"}, "id": "cryptonavigateur", "label": "@cryptonavigateur", "shape": "dot", "size": 18, "title": "@cryptonavigateur (tiktok)\u003cbr\u003ePosts: 2\u003cbr\u003eCommunaut\u00e9: 21"}, {"color": "#f39c12", "font": {"color": "white"}, "id": "lecryptopoloff", "label": "@lecryptopoloff", "shape": "dot", "size": 18, "title": "@lecryptopoloff (tiktok)\u003cbr\u003ePosts: 1\u003cbr\u003eCommunaut\u00e9: 33"}, {"color": "#2ecc71", "font": {"color": "white"}, "id": "cryptoastmedia", "label": "@cryptoastmedia", "shape": "dot", "size": 18, "title": "@cryptoastmedia (instagram)\u003cbr\u003ePosts: 1\u003cbr\u003eCommunaut\u00e9: 2"}, {"color": "#34495e", "font": {"color": "white"}, "id": "cryptoast_fr", "label": "@cryptoast_fr", "shape": "dot", "size": 18, "title": "@cryptoast_fr (telegram)\u003cbr\u003ePosts: 1\u003cbr\u003eCommunaut\u00e9: 7"}, {"color": "#2ecc71", "font": {"color": "white"}, "id": "blocks_tv", "label": "@blocks_tv", "shape": "dot", "size": 18, "title": "@blocks_tv (tiktok)\u003cbr\u003ePosts: 1\u003cbr\u003eCommunaut\u00e9: 12"}]);
+                  edges = new vis.DataSet([{"color": "#e74c3c", "from": "ardenmerov", "title": "7 copies", "to": "ardenmerov", "width": 2}, {"color": "#e74c3c", "from": "ardenmerov", "title": "3 copies", "to": "jbmerov", "width": 2}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"stabilization": {"iterations": 100}}, "nodes": {"borderWidth": 2, "size": 20}, "edges": {"smooth": {"type": "continuous"}}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    
+<style>
+  #ai-legend {
+    position: fixed; top: 16px; right: 16px; z-index: 9999;
+    background: rgba(20,20,40,0.93); border: 1px solid #444;
+    border-radius: 8px; padding: 14px 18px; color: #eee;
+    font-family: Arial, sans-serif; font-size: 13px;
+    min-width: 210px; box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  }
+  #ai-legend h4 { margin: 0 0 10px 0; font-size: 14px; color: #fff;
+                  border-bottom: 1px solid #555; padding-bottom: 6px; }
+  #ai-legend .section { margin-top: 8px; font-size: 11px;
+                        color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+  .ai-dot  { display:inline-block; width:12px; height:12px; border-radius:50%;
+             margin-right:7px; vertical-align:middle; }
+  .ai-line { display:inline-block; width:22px; height:3px;
+             margin-right:7px; vertical-align:middle; }
+  #ai-legend ul { margin:4px 0; padding:0; }
+  #ai-legend li { list-style:none; margin:5px 0; }
+</style>
+<div id="ai-legend">
+  <h4>&#128269; Légende</h4>
+  <div class="section">Noeuds — Communauté Louvain</div>
+  <ul>
+    <li><span class="ai-dot" style="background:#4C72B0"></span>Communauté 0</li>
+    <li><span class="ai-dot" style="background:#DD8452"></span>Communauté 1</li>
+    <li><span class="ai-dot" style="background:#55A868"></span>Communauté 2</li>
+    <li><span class="ai-dot" style="background:#C44E52"></span>Communauté 3</li>
+    <li><span class="ai-dot" style="background:#8172B3"></span>Communauté 4+</li>
+    <li><span class="ai-dot" style="background:#888888"></span>Hashtags communs</li>
+  </ul>
+  <div class="section">Taille</div>
+  <ul>
+    <li><span class="ai-dot" style="background:#aaa;width:18px;height:18px"></span>Compte suspect</li>
+    <li><span class="ai-dot" style="background:#aaa;width:10px;height:10px"></span>Compte normal</li>
+  </ul>
+  <div class="section">Arêtes</div>
+  <ul>
+    <li><span class="ai-line" style="background:#e74c3c"></span>Duplication de contenu</li>
+    <li><span class="ai-line" style="background:#888888"></span>Hashtags partagés</li>
+  </ul>
+  <div class="section">Interaction</div>
+  <ul>
+    <li style="color:#ccc;font-size:11px">&#128432; Survoler = détails du compte</li>
+    <li style="color:#ccc;font-size:11px">&#128432; Glisser = déplacer les noeuds</li>
+    <li style="color:#ccc;font-size:11px">&#128269; Molette = zoom</li>
+  </ul>
+</div>
+</body>
+</html>
